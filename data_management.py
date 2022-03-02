@@ -1,3 +1,4 @@
+from random import shuffle
 from main import * 
 
 def get_data():
@@ -31,115 +32,114 @@ def get_data():
         data_dir = '/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast'
 
     return data_dir
-
-    # # # Show some example images
-    # # ex_image = list(data_dir.glob('ex_image/*'))
-    # # PIL.Image.open(str(ex_image[0]))
-    # # PIL.Image.open(str(ex_image[1]))
-
     
 
-def augment_data(data_dir):
 
+def augment_data(data_dir):
     '''load and preprocess an image dataset using Keras preprocessing layers and utilities'''
     '''Create a dataset'''
-    # Set some parameters for the loader
-    batch_size = 32 # Typically standard size for smaller data sets (~1000 samples)
+    # Typically standard size for smaller data sets (~1000 samples)
+    batch_size = 32 
     img_height = 700
     img_width = 460
 
-    # Create Training dataset: 80% of total data is for training
-    train_ds = tf.keras.utils.image_dataset_from_directory(
+    # Pull dataset from directory. Shuffle the dataset
+    ds = tf.keras.utils.image_dataset_from_directory(
         data_dir,
-        validation_split=0.2,
-        subset="training",
         seed=123,
         image_size=(img_height, img_width),
-        batch_size=batch_size)
-
-    # Create Validation dataset: 20% of total data is for validation
-    val_ds = tf.keras.utils.image_dataset_from_directory(
-        data_dir,
-        validation_split=0.2,
-        subset="validation",
-        seed=123,
-        image_size=(img_height, img_width),
-        batch_size=batch_size)
-
-    # List of possible classifications 
-    class_names = train_ds.class_names
-
-    '''Visualize the Training Data'''
-    visualize_sample_data(class_names,train_ds)
+        batch_size=batch_size,
+        shuffle=True)
 
 
-    '''Standardize the Data to be within [0,1]'''
-    normalization_layer = tf.keras.layers.Rescaling(1./255)
-
-    # Can use this layer to apply it to the data set:
-    # Or (as shown in flowers example) you can include the layer inside the model definition to simplify deployment
-    normalized_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-    image_batch, labels_batch = next(iter(normalized_ds))
-
-
+    # Split the data: 80% training, 10% Validation, 10% testing
+    train_ds, val_ds, test_ds = get_dataset_partitions_tf(ds, len(ds))
+    print('\n',len(train_ds),'\n')
+    print('\n',len(test_ds),'\n')
+    print('\n',len(val_ds),'\n')
     '''Configure the dataset for performance'''
     AUTOTUNE = tf.data.AUTOTUNE
 
-    train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
-    val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
+    class_names = ['benign', 'malignant']
+    visualize_sample_data(class_names,train_ds,'augmented_training_set')
 
-    return train_ds,val_ds,class_names
+    return train_ds, val_ds, test_ds, class_names
+
+
+
+def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
+    assert (train_split + test_split + val_split) == 1
     
-
-
+    # Shuffling here might not be necessary
+    if shuffle:
+        # Specify seed to always have the same split distribution between runs
+        ds = ds.shuffle(shuffle_size, seed=12)
     
-    # '''DATA AUGMENTATION'''
-    # '''https://www.tensorflow.org/tutorials/images/data_augmentation
-    #   Increases the diversity of your training set by applying random 
-    #   (but realistic) transformations, such as image rotation'''
+    # Define the size of each split based on the ds_size
+    train_size = int(train_split * ds_size)
+    val_size = int(val_split * ds_size)
+    
+    # Split the data: 80% training, 10% Validation, 10% testing
+    train_ds = ds.take(train_size)    
+    val_ds = ds.skip(train_size).take(val_size)
+    test_ds = ds.skip(train_size).skip(val_size)
+    print(test_ds)
 
 
-    # # # Create a `Counter` object and `Dataset.zip` it together with the training set.
-    # counter = tf.data.experimental.Counter()
-    # train_ds = tf.data.Dataset.zip((train_ds, (counter, counter)))
+    return train_ds, val_ds, test_ds
 
-    # (train_ds, val_ds, test_ds), metadata = tfds.load(
-    #     # data_dir,
-    #     'tf_flowers',
-    #     split=['train[:80%]', 'train[80%:90%]', 'train[90%:]'],
-    #     with_info=True,
-    #     as_supervised=True,
-    # )
 
-    # # Shuffle and augment the Training dataset
-    # train_ds = (
-    #     train_ds
-    #     .shuffle(1000)
-    #     .map(support.augment, num_parallel_calls=AUTOTUNE)
-    #     .batch(batch_size)
-    #     .prefetch(AUTOTUNE)
-    # )
 
-    # # Shuffle and augment the Validation dataset
-    # val_ds = (
-    #     val_ds
-    #     .map(support.resize_and_rescale, num_parallel_calls=AUTOTUNE)
-    #     .batch(batch_size)
-    #     .prefetch(AUTOTUNE)
-    # )
 
-    # # Shuffle and augment the Tesing dataset
-    # test_ds = (
-    #     test_ds
-    #     .map(support.resize_and_rescale, num_parallel_calls=AUTOTUNE)
-    #     .batch(batch_size)
-    #     .prefetch(AUTOTUNE)
-    # )
 
-    # support.visualize_sample_data(class_names,train_ds,'augmented_training_set')
+# def augment_data(data_dir):
+#     # '''DATA AUGMENTATION'''
+#     # '''https://www.tensorflow.org/tutorials/images/data_augmentation
+#     #   Increases the diversity of your training set by applying random 
+#     #   (but realistic) transformations, such as image rotation'''
 
-    # # Prints out the possible class names of the flowers
-    # class_names = train_ds.class_names
-    # print(class_names)
 
-    # return train_ds,val_ds,class_names
+#     # # Create a `Counter` object and `Dataset.zip` it together with the training set.
+#     # counter = tf.data.experimental.Counter()
+#     # train_ds = tf.data.Dataset.zip((train_ds, (counter, counter)))
+
+#     (train_ds, val_ds, test_ds), metadata = tfds.load(
+#         data_dir = data_dir,
+#         # 'tf_flowers',
+#         split=['train[:80%]', 'train[80%:90%]', 'train[90%:]'],
+#         with_info=True,
+#         as_supervised=True,
+#     )
+
+#     # Shuffle and augment the Training dataset
+#     train_ds = (
+#         train_ds
+#         .shuffle(1000)
+#         .map(support.augment, num_parallel_calls=AUTOTUNE)
+#         .batch(batch_size)
+#         .prefetch(AUTOTUNE)
+#     )
+
+#     # Shuffle and augment the Validation dataset
+#     val_ds = (
+#         val_ds
+#         .map(support.resize_and_rescale, num_parallel_calls=AUTOTUNE)
+#         .batch(batch_size)
+#         .prefetch(AUTOTUNE)
+#     )
+
+#     # Shuffle and augment the Tesing dataset
+#     test_ds = (
+#         test_ds
+#         .map(support.resize_and_rescale, num_parallel_calls=AUTOTUNE)
+#         .batch(batch_size)
+#         .prefetch(AUTOTUNE)
+#     )
+
+#     support.visualize_sample_data(class_names,train_ds,'augmented_training_set')
+
+#     # Prints out the possible class names of the flowers
+#     class_names = train_ds.class_names
+#     print(class_names)
+
+#     return train_ds,val_ds,class_names

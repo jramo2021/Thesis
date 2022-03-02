@@ -1,16 +1,8 @@
-# import numpy as np
-# import os
-# import PIL
-# import PIL.Image
-# import tensorflow as tf
-# import pathlib
-# import matplotlib.pyplot as plt
-# import support_functions as support
 from main import *
 
 # Example from https://www.tensorflow.org/tutorials/load_data/images
 
-def train(train_ds,val_ds,class_names):
+def train(train_ds,val_ds):
     '''Train the Model'''
     num_classes = 2
 
@@ -30,12 +22,15 @@ def train(train_ds,val_ds,class_names):
 
     # To view the training and validation accuracy for each training epock, 
     # pass the metrics argument to model.compile
+    print("\nCompiling Model")
     model.compile(
         optimizer='adam',
         loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=['accuracy'])
+        # metrics=['accuracy'])
+        metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
 
     # Fit data to the model
+    print("\nFit Model on Training Data")
     model.fit(
         train_ds,
         validation_data=val_ds,
