@@ -1,12 +1,25 @@
 from main import *
+import sys
+import tensorflow as tf
+import time
 
 # Example from https://www.tensorflow.org/tutorials/load_data/images
 
 def train(train_ds,val_ds):
+    
+    start = time.time()
     '''Train the Model'''
     num_classes = 2
 
+
+    '''Create model'''
     model = tf.keras.Sequential([
+        # Preprocessing Layers
+        # resize_and_rescale,
+        
+        # Lambda(rgb_to_grayscale),
+        # Lambda(lambda x: tf.image.rgb_to_grayscale(x)),
+        # 
         tf.keras.layers.Rescaling(1./255),
         tf.keras.layers.Conv2D(32, 3, activation='relu'),
         tf.keras.layers.MaxPooling2D(),
@@ -22,7 +35,7 @@ def train(train_ds,val_ds):
 
     # To view the training and validation accuracy for each training epock, 
     # pass the metrics argument to model.compile
-    print("\nCompiling Model")
+    # print("\nCompiling Model")
     model.compile(
         optimizer='adam',
         loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -30,48 +43,23 @@ def train(train_ds,val_ds):
         metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
 
     # Fit data to the model
-    print("\nFit Model on Training Data")
+    # print("\nFit Model on Training Data")
     model.fit(
         train_ds,
         validation_data=val_ds,
-        epochs=3
+        # epochs=3
+        epochs=4
     )
+
+    end = time.time()
+    print("\nTraining took:%0.2f" %(end - start),"seconds\n")
 
     return model
 
-    # '''DATA AUGMENTATION'''
-    # '''https://www.tensorflow.org/tutorials/images/data_augmentation
-    #   Increases the diversity of your training set by applying random 
-    #   (but realistic) transformations, such as image rotation'''
+def rgb_to_grayscale(x):
+    #x has shape (batch, width, height, channels)
+    return (0.21 * x[:,:,:,:1]) + (0.72 * x[:,:,:,1:2]) + (0.07 * x[:,:,:,-1:])
 
+    
 
-    # # # Create a `Counter` object and `Dataset.zip` it together with the training set.
-    # # counter = tf.data.experimental.Counter()
-    # # train_ds = tf.data.Dataset.zip((train_datasets, (counter, counter)))
-
-    # # Shuffle and augment the Training dataset
-    # train_ds = (
-    #     train_ds
-    #     .shuffle(1000)
-    #     .map(support.augment, num_parallel_calls=AUTOTUNE)
-    #     .batch(batch_size)
-    #     .prefetch(AUTOTUNE)
-    # )
-
-    # # Shuffle and augment the Validation dataset
-    # val_ds = (
-    #     val_ds
-    #     .map(support.resize_and_rescale, num_parallel_calls=AUTOTUNE)
-    #     .batch(batch_size)
-    #     .prefetch(AUTOTUNE)
-    # )
-
-    # # Shuffle and augment the Tesing dataset
-    # test_ds = (
-    #     test_ds
-    #     .map(support.resize_and_rescale, num_parallel_calls=AUTOTUNE)
-    #     .batch(batch_size)
-    #     .prefetch(AUTOTUNE)
-    # )
-
-    # support.visualize_sample_data(class_names,train_ds,'augmented_training_set')
+    
