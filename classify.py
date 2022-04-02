@@ -14,12 +14,6 @@ def train(train_ds,val_ds):
 
     '''Create model'''
     model = tf.keras.Sequential([
-        # Preprocessing Layers
-        # resize_and_rescale,
-        
-        # Lambda(rgb_to_grayscale),
-        # Lambda(lambda x: tf.image.rgb_to_grayscale(x)),
-        # 
         tf.keras.layers.Rescaling(1./255),
         tf.keras.layers.Conv2D(32, 3, activation='relu'),
         tf.keras.layers.MaxPooling2D(),
@@ -38,17 +32,24 @@ def train(train_ds,val_ds):
     # print("\nCompiling Model")
     model.compile(
         optimizer='adam',
+        
         loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
-        # metrics=['accuracy'])
         metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
+
+        # optimizer='sgd',
+        # loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+        # # metrics=[tf.keras.metrics.AUC(from_logits=True)])
+        
+        # metrics=['accuracy'])
+        
 
     # Fit data to the model
     # print("\nFit Model on Training Data")
     model.fit(
         train_ds,
         validation_data=val_ds,
-        # epochs=3
-        epochs=4
+        epochs=3
+        # epochs=4
     )
 
     end = time.time()

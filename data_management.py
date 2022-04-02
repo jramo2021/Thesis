@@ -4,6 +4,7 @@ import tensorflow as tf
 import time
 import matplotlib.pyplot as plt
 import copy
+import numpy as np
 
 def get_data():
     '''If the data folder already exists, the directory for the data will be returned.
@@ -53,8 +54,8 @@ def preprocess_data(data_dir, color_mode = 'rgb'):
     # Typically standard size for smaller data sets (~1000 samples)
     start = time.time()
     batch_size = 32 
-    img_height = 700
-    img_width = 460
+    # img_size = 512
+    img_size = 256
 
     # Pull dataset from directory. Shuffle the dataset
     ds = tf.keras.utils.image_dataset_from_directory(
@@ -63,7 +64,8 @@ def preprocess_data(data_dir, color_mode = 'rgb'):
         # color_mode="grayscale",
         color_mode = color_mode,
         seed=123,
-        image_size=(img_height, img_width),
+        image_size=(img_size, img_size),
+        # image_size=(700, 460),
         batch_size=batch_size,
         shuffle=True)
 
@@ -73,7 +75,6 @@ def preprocess_data(data_dir, color_mode = 'rgb'):
     # train_ds, val_ds, test_ds = get_dataset_partitions_tf(ds, len(ds))
     train_ds, val_ds, test_ds, augmented_data = get_dataset_partitions_tf(ds, len(ds))
 
-    # val_ds.batch(32)
 
     print('\n#Training Batches:',len(train_ds))
     print('\n#Valdiation Batches:',len(val_ds))
@@ -83,12 +84,10 @@ def preprocess_data(data_dir, color_mode = 'rgb'):
     AUTOTUNE = tf.data.AUTOTUNE
 
     class_names = ['benign', 'malignant']
-    visualize_sample_data(class_names,train_ds,'augmented_training_set')
+    visualize_sample_data(class_names,train_ds,'training samples')
 
     # return train_ds, val_ds, test_ds, class_names
     return train_ds, val_ds, test_ds, augmented_data, class_names
-
-
 
 # def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
 #     assert (train_split + test_split + val_split) == 1
@@ -96,98 +95,78 @@ def preprocess_data(data_dir, color_mode = 'rgb'):
 #     # Shuffling here might not be necessary
 #     if shuffle:
 #         # Specify seed to always have the same split distribution between runs
-#         ds = ds.shuffle(shuffle_size, seed=12)
+#         ds = ds.shuffle(shuffle_size, seed=123)
+    
+#     total_size = train_split*(1+aug_size)+val_split + test_split
     
 #     # Define the size of each split based on the ds_size
 #     train_size = int(train_split * ds_size)
 #     val_size = int(val_split * ds_size)
+#     aug_size = int(train_split * .2 * ds_size)
     
 #     # Split the data: 80% training, 10% Validation, 10% testing
-#     train_ds = ds.take(train_size)    
+#     train_ds = ds.take(train_size)
+#     aug_ds = ds.take(aug_size)    
 #     val_ds = ds.skip(train_size).take(val_size)
 #     test_ds = ds.skip(train_size).skip(val_size)
-#     print(test_ds)
+#     print("\nTraining Set:",train_ds)
+#     print("\nAugmented Set:",aug_ds)
 
+#     return train_ds, val_ds, test_ds, aug_ds
 
-#     return train_ds, val_ds, test_ds
-
-def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
+'''Experimental: check that it works (total size is too big I think, maybe divide by total size?)'''
+def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, aug_split = .2, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
     assert (train_split + test_split + val_split) == 1
     
     # Shuffling here might not be necessary
     if shuffle:
         # Specify seed to always have the same split distribution between runs
-        ds = ds.shuffle(shuffle_size, seed=123)
+        ds = ds.shuffle(shuffle_size, seed=123)    
+
     
-    # Define the size of each split based on the ds_size
+    # Define the size of each split based on the ds_size and the splits
     train_size = int(train_split * ds_size)
-    val_size = int(val_split * ds_size)
-    aug_size = int(train_split * .2 * ds_size)
+    aug_size = int(train_split * ds_size * aug_split)
+
+    # Expanded size accounts for adding the augmented data points
+    expanded_size = 1 + train_split*aug_split
+    val_size = int(val_split * expanded_size * ds_size)
+    
     
     # Split the data: 80% training, 10% Validation, 10% testing
-    train_ds = ds.take(train_size)
-    aug_ds = ds.take(aug_size)    
-    val_ds = ds.skip(train_size).take(val_size)
-    test_ds = ds.skip(train_size).skip(val_size)
-    print("\nTraining Set:",train_ds)
-    print("\nAugmented Set:",aug_ds)
+    # train_ds = ds.take(train_size)
+    # aug_ds = ds.take(aug_size)    
+    # val_ds = ds.skip(train_size).take(val_size)
+    # test_ds = ds.skip(train_size).skip(val_size)
+    
+    val_ds = ds.take(val_size)
+    test_ds = ds.skip(val_size).take(val_size)
+    train_ds = ds.skip(val_size).skip(val_size)
+    aug_ds = ds.skip(val_size).skip(val_size).take(aug_size)
+    
 
     return train_ds, val_ds, test_ds, aug_ds
 
 def augment_data(train_ds,aug_ds):
-    '''Demonstrate Image Rotation'''
-    
-    
-
     '''Define Augmentations'''
     # resize_and_rescale = tf.keras.Sequential([
     #     tf.keras.layers.Resizing(700, 460),
     # ])
 
+    # Performs random rotation and flip
     rot_and_flip_aug = tf.keras.Sequential([
         tf.keras.layers.RandomFlip("horizontal_and_vertical",seed=123),
-        tf.keras.layers.RandomRotation(factor=(-1, 1),seed=123),
+        tf.keras.layers.RandomRotation(factor=(-.5, .5),seed=123),
     ])
 
+    # Applies rotation and flip to the data
+    # The parallel call makes it so that it runs the rotation and 
+    # flip process in parallel with mapping it to the data. Making 
+    # the training take much less time (~244s -> ~112s)
+    AUTOTUNE = tf.data.AUTOTUNE
     aug_ds = aug_ds.map(
-        lambda x, y: (rot_and_flip_aug(x, training=True), y))
-    
-    
-    
+        lambda x, y: (rot_and_flip_aug(x, training=True), y),num_parallel_calls=AUTOTUNE)
 
-    # print("train_ds:",train_ds)
-    # images, label = next(iter(train_ds))
-    # print("number of training batches:",len(train_ds))
-    # print('Batch_size:',len(images))
-    # print('Rows:',len(images[0]))
-    # print('Columns:',len(images[0][0]))
-    # print('RGB:',len(images[0][0][0]))
-
-    
-    # Apply rotation and flip to the data 
-    # (this is what will make it different from the original training samples)
-    
-    
-    # aug_ds = rot_and_flip_aug(aug_ds)
-    
-    # class_names = ['benign', 'malignant']
-    # plt.figure(figsize=(10, 10))
-    # for images, labels in train_ds.take(1):
-    #     for i in range(9):
-    #         ax = plt.subplot(3, 3, i + 1)
-    #         plt.imshow(images[i].numpy().astype("uint8"))
-    #         plt.title(class_names[labels[i]])
-    #         plt.axis("off")
-    # plt.savefig('/home/Thesis/train.png')
-
-    # plt.figure(figsize=(10, 10))
-    # for images, labels in aug_ds.take(1):
-    #     for i in range(9):
-    #         ax = plt.subplot(3, 3, i + 1)
-    #         plt.imshow(images[i].numpy().astype("uint8"))
-    #         plt.title(class_names[labels[i]])
-    #         plt.axis("off")
-    # plt.savefig('/home/Thesis/augmented.png')
 
     images, label = next(iter(train_ds))
     print('\nBefore Concatenation')
@@ -197,6 +176,7 @@ def augment_data(train_ds,aug_ds):
     print('Columns:',len(images[0][0]))
     print('RGB:',len(images[0][0][0]))
 
+    # Append the augmented data to the training data
     train_ds = train_ds.concatenate(aug_ds)
     
     print('\nAfter Concatenation')
@@ -207,11 +187,11 @@ def augment_data(train_ds,aug_ds):
     print('Columns:',len(images[0][0]))
     print('RGB:',len(images[0][0][0]))
     
-    
-
-
     # train_ds = train_ds.shuffle(shuffle_size, seed = 123)
     
+    # Show some augmentations
+    visualize_augmentations(train_ds,filename = "augmentations")
+
     print(len(train_ds))
     return train_ds
 
