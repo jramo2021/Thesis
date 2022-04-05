@@ -48,7 +48,7 @@ def get_data():
 
     return data_dir
     
-def preprocess_data(data_dir, color_mode = 'rgb'):
+def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
     '''load and preprocess an image dataset using Keras preprocessing layers and utilities'''
     '''Create a dataset'''
     # Typically standard size for smaller data sets (~1000 samples)
@@ -69,16 +69,20 @@ def preprocess_data(data_dir, color_mode = 'rgb'):
         batch_size=batch_size,
         shuffle=True)
 
-    print('\n#Training Batches:',len(ds))
-
+    
     # Split the data: 80% training, 10% Validation, 10% testing
-    # train_ds, val_ds, test_ds = get_dataset_partitions_tf(ds, len(ds))
-    train_ds, val_ds, test_ds, augmented_data = get_dataset_partitions_tf(ds, len(ds))
+    train_ds, val_ds, test_ds, aug_ds = get_dataset_partitions_tf(ds, len(ds),aug_split = aug_split)
+    
+    # If augmentation split was valid, it will perform the augmentation 
+    # and append the augmented data to the training set
+    print("Performing Data Augmentation:",aug_ds is not None)
+    if aug_ds is not None:
+        train_ds = augment_data(train_ds,aug_ds)
 
-
-    print('\n#Training Batches:',len(train_ds))
-    print('\n#Valdiation Batches:',len(val_ds))
-    print('\n#Testing Batches:',len(test_ds))
+    print('\n#Total Batches:',len(train_ds) + len(val_ds) + len(test_ds))
+    print('#Training Batches:',len(train_ds))
+    print('#Valdiation Batches:',len(val_ds))
+    print('#Testing Batches:',len(test_ds),'\n')
     
     '''Configure the dataset for performance'''
     AUTOTUNE = tf.data.AUTOTUNE
@@ -87,7 +91,7 @@ def preprocess_data(data_dir, color_mode = 'rgb'):
     visualize_sample_data(class_names,train_ds,'training samples')
 
     # return train_ds, val_ds, test_ds, class_names
-    return train_ds, val_ds, test_ds, augmented_data, class_names
+    return train_ds, val_ds, test_ds
 
 # def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
 #     assert (train_split + test_split + val_split) == 1
@@ -115,7 +119,8 @@ def preprocess_data(data_dir, color_mode = 'rgb'):
 #     return train_ds, val_ds, test_ds, aug_ds
 
 '''Experimental: check that it works (total size is too big I think, maybe divide by total size?)'''
-def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, aug_split = .2, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
+def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, aug_split = 0, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
+    print(train_split + test_split + val_split)
     assert (train_split + test_split + val_split) == 1
     
     # Shuffling here might not be necessary
@@ -123,10 +128,6 @@ def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, aug_split = .2, val_
         # Specify seed to always have the same split distribution between runs
         ds = ds.shuffle(shuffle_size, seed=123)    
 
-    
-    # Define the size of each split based on the ds_size and the splits
-    train_size = int(train_split * ds_size)
-    aug_size = int(train_split * ds_size * aug_split)
 
     # Expanded size accounts for adding the augmented data points
     expanded_size = 1 + train_split*aug_split
@@ -142,7 +143,15 @@ def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, aug_split = .2, val_
     val_ds = ds.take(val_size)
     test_ds = ds.skip(val_size).take(val_size)
     train_ds = ds.skip(val_size).skip(val_size)
-    aug_ds = ds.skip(val_size).skip(val_size).take(aug_size)
+
+    # Only perform augmentation if the range is valid
+    if aug_split > 0 and aug_split <=1:
+        # Define the size of each split based on the ds_size and the splits
+        # train_size = int(train_split * ds_size)
+        aug_size = int(train_split * ds_size * aug_split)
+        aug_ds = ds.skip(val_size).skip(val_size).take(aug_size)
+    else:
+        aug_ds = None
     
 
     return train_ds, val_ds, test_ds, aug_ds
