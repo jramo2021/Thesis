@@ -19,7 +19,6 @@ def tree_file_printer(root):
             print (os.path.join(root, f))
 
 # tree_directory_printer('C:/Users/Ross/OneDrive/Documents/Thesis')
-
 '''Visualizations'''
 def visualize_sample_data(class_names,train_ds,filename = "visualize_sample_data"):
     # Save sample images of training data
@@ -49,15 +48,10 @@ def visualize_sample_data(class_names,train_ds,filename = "visualize_sample_data
 #     plt.savefig('/home/Thesis/'+ filename +'.png')
 
 
-def visualize_augmentations(train_ds,filename = "augmentations"):
+def visualize_augmentations(train_ds,rot_and_flip_aug,filename = "augmentations"):
     # Save sample images of training data
     plt.figure(figsize=(10, 10))
     image, label = next(iter(train_ds))
-
-    rot_and_flip_aug = tf.keras.Sequential([
-        tf.keras.layers.RandomFlip("horizontal_and_vertical",seed=123),
-        tf.keras.layers.RandomRotation(factor=(-.5, .5),seed=123),
-    ])
 
     ax = plt.subplot(3, 3, 1)
     plt.imshow(image[1].numpy().astype("uint8"))
@@ -70,17 +64,30 @@ def visualize_augmentations(train_ds,filename = "augmentations"):
         
         ax = plt.subplot(3, 3, i + 2)
         plt.imshow(result.numpy().astype("uint8"))
-        plt.title("Possible Augment")
+        plt.title('Possible Augment '+str(i+1))
         plt.axis("off")
 
     # Save image
     plt.savefig('/home/Thesis/'+filename+'.png')
 
-# def getSamplesFromDataGen(resultData):
-#     x = resultData.next() #fetch the first batch
-#     a = x[0] # train data
-#     b = x[1] # train label
-#     for i in range(0,5):
-#         plt.imshow(a[i])
-#         plt.title(b[i])
-#         plt.show() 
+def plot_history(history):
+
+    plt.figure() 
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.show()
+    plt.savefig('/home/Thesis/Loss Plot.png')
+    
+    plt.figure()
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.show()
+    plt.savefig('/home/Thesis/Accuracy Plot.png')

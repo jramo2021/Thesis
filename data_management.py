@@ -52,7 +52,7 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
     '''load and preprocess an image dataset using Keras preprocessing layers and utilities'''
     '''Create a dataset'''
     # Typically standard size for smaller data sets (~1000 samples)
-    start = time.time()
+    
     batch_size = 32 
     # img_size = 512
     img_size = 256
@@ -64,8 +64,8 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
         # color_mode="grayscale",
         color_mode = color_mode,
         seed=123,
-        image_size=(img_size, img_size),
-        # image_size=(700, 460),
+        # image_size=(img_size, img_size),
+        image_size=(700, 460),
         batch_size=batch_size,
         shuffle=True)
 
@@ -75,14 +75,17 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
     
     # If augmentation split was valid, it will perform the augmentation 
     # and append the augmented data to the training set
-    print("Performing Data Augmentation:",aug_ds is not None)
+    print("\nPerforming Data Augmentation:",aug_ds is not None)
     if aug_ds is not None:
         train_ds = augment_data(train_ds,aug_ds)
-
-    print('\n#Total Batches:',len(train_ds) + len(val_ds) + len(test_ds))
+        print('After Adding Augmentation:')
+    
+    print('#Total Batches:',len(train_ds) + len(val_ds) + len(test_ds))
     print('#Training Batches:',len(train_ds))
     print('#Valdiation Batches:',len(val_ds))
     print('#Testing Batches:',len(test_ds),'\n')
+
+    
     
     '''Configure the dataset for performance'''
     AUTOTUNE = tf.data.AUTOTUNE
@@ -118,7 +121,8 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
 
 #     return train_ds, val_ds, test_ds, aug_ds
 
-'''Experimental: check that it works (total size is too big I think, maybe divide by total size?)'''
+
+
 def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, aug_split = 0, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
     print(train_split + test_split + val_split)
     assert (train_split + test_split + val_split) == 1
@@ -153,7 +157,6 @@ def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, aug_split = 0, val_s
     else:
         aug_ds = None
     
-
     return train_ds, val_ds, test_ds, aug_ds
 
 def augment_data(train_ds,aug_ds):
@@ -165,7 +168,7 @@ def augment_data(train_ds,aug_ds):
     # Performs random rotation and flip
     rot_and_flip_aug = tf.keras.Sequential([
         tf.keras.layers.RandomFlip("horizontal_and_vertical",seed=123),
-        tf.keras.layers.RandomRotation(factor=(-.5, .5),seed=123),
+        tf.keras.layers.RandomRotation(factor=(.35,.35),seed=123),
     ])
 
     # Applies rotation and flip to the data
@@ -176,30 +179,29 @@ def augment_data(train_ds,aug_ds):
     aug_ds = aug_ds.map(
         lambda x, y: (rot_and_flip_aug(x, training=True), y),num_parallel_calls=AUTOTUNE)
 
-
-    images, label = next(iter(train_ds))
-    print('\nBefore Concatenation')
-    print("number of training batches:",len(train_ds))
-    print('Batch_size:',len(images))
-    print('Rows:',len(images[0]))
-    print('Columns:',len(images[0][0]))
-    print('RGB:',len(images[0][0][0]))
+    # images, label = next(iter(train_ds))
+    # print('\nBefore Concatenation')
+    # print("number of training batches:",len(train_ds))
+    # print('Batch_size:',len(images))
+    # print('Rows:',len(images[0]))
+    # print('Columns:',len(images[0][0]))
+    # print('RGB:',len(images[0][0][0]))
 
     # Append the augmented data to the training data
     train_ds = train_ds.concatenate(aug_ds)
     
-    print('\nAfter Concatenation')
-    images, label = next(iter(train_ds))
-    print("number of training batches:",len(train_ds))
-    print('Batch_size:',len(images))
-    print('Rows:',len(images[0]))
-    print('Columns:',len(images[0][0]))
-    print('RGB:',len(images[0][0][0]))
+    # print('\nAfter Concatenation')
+    # images, label = next(iter(train_ds))
+    # print("number of training batches:",len(train_ds))
+    # print('Batch_size:',len(images))
+    # print('Rows:',len(images[0]))
+    # print('Columns:',len(images[0][0]))
+    # print('RGB:',len(images[0][0][0]))
     
     # train_ds = train_ds.shuffle(shuffle_size, seed = 123)
     
     # Show some augmentations
-    visualize_augmentations(train_ds,filename = "augmentations")
+    visualize_augmentations(train_ds,rot_and_flip_aug,filename = "augmentations")
 
     print(len(train_ds))
     return train_ds
