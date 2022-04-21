@@ -64,15 +64,20 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
         # color_mode="grayscale",
         color_mode = color_mode,
         seed=123,
-        # image_size=(img_size, img_size),
-        image_size=(700, 460),
+        image_size=(img_size, img_size),
+        # image_size=(700, 460),
         batch_size=batch_size,
         shuffle=True)
+        
 
+    print(len(ds))
     
     # Split the data: 80% training, 10% Validation, 10% testing
     train_ds, val_ds, test_ds, aug_ds = get_dataset_partitions_tf(ds, len(ds),aug_split = aug_split)
     
+
+    
+
     # If augmentation split was valid, it will perform the augmentation 
     # and append the augmented data to the training set
     print("\nPerforming Data Augmentation:",aug_ds is not None)
@@ -127,10 +132,10 @@ def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, aug_split = 0, val_s
     print(train_split + test_split + val_split)
     assert (train_split + test_split + val_split) == 1
     
-    # Shuffling here might not be necessary
-    if shuffle:
-        # Specify seed to always have the same split distribution between runs
-        ds = ds.shuffle(shuffle_size, seed=123)    
+    # # Shuffling here might not be necessary
+    # if shuffle:
+    #     # Specify seed to always have the same split distribution between runs
+    #     ds = ds.shuffle(shuffle_size, seed=123)    
 
 
     # Expanded size accounts for adding the augmented data points
@@ -148,6 +153,7 @@ def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, aug_split = 0, val_s
     test_ds = ds.skip(val_size).take(val_size)
     train_ds = ds.skip(val_size).skip(val_size)
 
+    print('Test_ds length',val_size)
     # Only perform augmentation if the range is valid
     if aug_split > 0 and aug_split <=1:
         # Define the size of each split based on the ds_size and the splits

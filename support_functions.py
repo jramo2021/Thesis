@@ -24,7 +24,6 @@ def visualize_sample_data(class_names,train_ds,filename = "visualize_sample_data
     # Save sample images of training data
     plt.figure(figsize=(10, 10))
     for images, labels in train_ds.take(1):
-    # for images, labels in train_ds.take(2):
         for i in range(9):
             ax = plt.subplot(3, 3, i + 1)
             plt.imshow(images[i].numpy().astype("uint8"))
