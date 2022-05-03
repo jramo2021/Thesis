@@ -4,13 +4,7 @@ import tensorflow as tf
 import time
 
 # Example from https://www.tensorflow.org/tutorials/load_data/images
-
-def train(train_ds,val_ds):
-    
-    start = time.time()
-    '''Train the Model'''
-    num_classes = 2
-
+def define_model():
 
     '''Create model (Original)'''
     model = tf.keras.Sequential([
@@ -23,7 +17,7 @@ def train(train_ds,val_ds):
         tf.keras.layers.MaxPooling2D(),
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dense(num_classes)
+        tf.keras.layers.Dense(2)
     ])
 
     # '''Create model (Mod 1)'''
@@ -33,7 +27,7 @@ def train(train_ds,val_ds):
     #     tf.keras.layers.MaxPooling2D(),
     #     tf.keras.layers.Flatten(),
     #     tf.keras.layers.Dense(128, activation='relu'),
-    #     tf.keras.layers.Dense(num_classes)
+    #     tf.keras.layers.Dense(2)
     # ])
 
     # '''Create model (Mod 2)'''
@@ -43,7 +37,7 @@ def train(train_ds,val_ds):
     #     tf.keras.layers.MaxPooling2D(),
     #     tf.keras.layers.Flatten(),
     #     tf.keras.layers.Dense(256, activation='relu'),
-    #     tf.keras.layers.Dense(num_classes)
+    #     tf.keras.layers.Dense(2)
     # ])
 
     # '''Create model (Mod 3)'''
@@ -53,7 +47,7 @@ def train(train_ds,val_ds):
     #     tf.keras.layers.MaxPooling2D(),
     #     tf.keras.layers.Flatten(),
     #     tf.keras.layers.Dense(128, activation='relu'),
-    #     tf.keras.layers.Dense(num_classes)
+    #     tf.keras.layers.Dense(2)
     # ])
 
     # '''Create model (Mod 4)'''
@@ -64,7 +58,7 @@ def train(train_ds,val_ds):
     #     tf.keras.layers.MaxPooling2D(),
     #     tf.keras.layers.Flatten(),
     #     tf.keras.layers.Dense(1024, activation='relu'),
-    #     tf.keras.layers.Dense(num_classes)
+    #     tf.keras.layers.Dense(2)
     # ])
     
     # '''Create model (Mod 5)'''
@@ -75,73 +69,40 @@ def train(train_ds,val_ds):
     #     tf.keras.layers.MaxPooling2D(),
     #     tf.keras.layers.Flatten(),
     #     tf.keras.layers.Dense(512, activation='relu'),
-    #     tf.keras.layers.Dense(num_classes)
+    #     tf.keras.layers.Dense(2)
     # ])
     
 
-    # mergedOut = tf.keras.layers.Add()([model0.output,model1.output])
-    # model = tf.keras.layers.Model([model0.input,model1.input], mergedOut)
+    # '''ResNet model'''
+    # model = tf.keras.applications.resnet50.ResNet50()
 
-    # # ResNet and KGG16 notes https://keras.io/api/applications/
+    # '''VGG16 model'''
+    # model = tf.keras.applications.vgg16.VGG16(
+    #     include_top=True,
+    #     weights=None,
+    #     classes=2)
+
+    # '''VGG16 model'''
     # model = tf.keras.Sequential([
-    #     tf.keras.applications.ResNet50(
-    #         include_top=False,
-    #         weights="imagenet",
-    #         # input_tensor=None,
-    #         input_shape=(256,256,3),
-    #         # pooling=None,
-    #         classes=num_classes),
-    #     tf.keras.layers.Dense(128, activation='relu'),
-    #     tf.keras.layers.Dense(num_classes)])
-
-    # # Home made VGG16 https://towardsdatascience.com/step-by-step-vgg16-implementation-in-keras-for-beginners-a833c686ae6c
-    # model = tf.keras.Sequential()
-    # model.add(tf.keras.layers.Conv2D(input_shape=(224,224,3),filters=64,kernel_size=(3,3),padding="same", activation="relu"))
-    # model.add(tf.keras.layers.Conv2D(filters=64,kernel_size=(3,3),padding="same", activation="relu"))
-    # model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2),strides=(2,2)))
-    # model.add(tf.keras.layers.Conv2D(filters=128, kernel_size=(3,3), padding="same", activation="relu"))
-    # model.add(tf.keras.layers.Conv2D(filters=128, kernel_size=(3,3), padding="same", activation="relu"))
-    # model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2),strides=(2,2)))
-    # model.add(tf.keras.layers.Conv2D(filters=256, kernel_size=(3,3), padding="same", activation="relu"))
-    # model.add(tf.keras.layers.Conv2D(filters=256, kernel_size=(3,3), padding="same", activation="relu"))
-    # model.add(tf.keras.layers.Conv2D(filters=256, kernel_size=(3,3), padding="same", activation="relu"))
-    # model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2),strides=(2,2)))
-    # model.add(tf.keras.layers.Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-    # model.add(tf.keras.layers.Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-    # model.add(tf.keras.layers.Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-    # model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2),strides=(2,2)))
-    # model.add(tf.keras.layers.Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-    # model.add(tf.keras.layers.Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-    # model.add(tf.keras.layers.Conv2D(filters=512, kernel_size=(3,3), padding="same", activation="relu"))
-    # model.add(tf.keras.layers.MaxPool2D(pool_size=(2,2),strides=(2,2)))
-
-    # model.add(tf.keras.layers.Flatten())
-    # model.add(tf.keras.layers.Dense(units=4096,activation="relu"))
-    # model.add(tf.keras.layers.Dense(units=4096,activation="relu"))
-    # model.add(tf.keras.layers.Dense(units=2, activation="softmax"))
+    #     tf.keras.applications.vgg16.preprocess_input(
+    #         x, data_format=None),
+    #     tf.keras.applications.vgg16.VGG16(
+    #         include_top=True,
+    #         weights=None,
+    #         classes=2)
+    # )]    
     
-    
-    
-    
-    # model = VGG16(weights='imagenet', include_top=False)
 
     # To view the training and validation accuracy for each training epoch, 
     # pass the metrics argument to model.compile
     # print("\nCompiling Model")
     
+    '''Compile the Model'''
     model.compile(
         optimizer='adam',
         loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
+        # loss=tf.losses.SparseCategoricalCrossentropy(from_logits=False),
         metrics=['accuracy','mae'])
-
-    # # Doesn't Work
-    # model.compile(
-    #     optimizer='adam',
-    #     loss = 'Loss',
-    #     # loss=tf.keras.losses.Loss,
-    #     # loss = tf.keras.losses.Loss(
-    #     #     reduction=losses_utils.ReductionV2.AUTO, name=None),
-    #     metrics=['accuracy','mae'])
 
     # # Terrible Implementation 
     # model.compile(
@@ -149,7 +110,12 @@ def train(train_ds,val_ds):
     #     loss=tf.keras.losses.BinaryCrossentropy(),
     #     metrics=['accuracy','mae'])
 
+    return model
+
+def train(model,train_ds,val_ds):
     
+    # Start Training Timer
+    start = time.time()
 
     '''Fit data to model using 3 epochs'''
     history = model.fit(
@@ -158,22 +124,51 @@ def train(train_ds,val_ds):
         epochs=3
     )
 
-    '''Fit data to model using 25 epochs and early stopping'''
+    # '''Fit data to model using 25 epochs and early stopping'''
     # # https://www.geeksforgeeks.org/choose-optimal-number-of-epochs-to-train-a-neural-network-in-keras/
     # # Early Stopping Call back will stop training if the model 
     # # hasn't decreased the validation loss in the last 5 epochs.
     # # If it stops early, it will restore the weights that had the minimum loss.
-    # earlystopping = tf.keras.callbacks.EarlyStopping(monitor ="val_loss", 
-    #                                     mode ="min", patience = 5, 
-    #                                     restore_best_weights = True)
+    # earlystopping = tf.keras.callbacks.EarlyStopping(
+    #     monitor ="val_loss", 
+    #     mode ="min", 
+    #     patience = 5, 
+    #     restore_best_weights = True)
+
+    # if not os.path.isdir(path):
+    #     # Create the checkpoint path in the Docker container
+    #     os.makedirs(path)
+
+    # # https://keras.io/api/callbacks/model_checkpoint/
+    # # Save the best model 
+    # model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    #     # filepath = path,
+    #     # filepath=path+'model.{epoch:02d}-{val_loss:.2f}.h5',
+    #     filepath=path+'checkpoint.h5',
+    #     save_weights_only=True,
+    #     monitor='val_accuracy',
+    #     mode='max',
+    #     save_best_only=True)
 
 
+
+    # # Start Training Timer
+    # start = time.time()
+
+    # # Fit Training Data to Model (Train Data)
     # history = model.fit(
     #     train_ds,
     #     validation_data=val_ds,        
     #     epochs=25,
-    #     callbacks =[earlystopping]
+    #     # callbacks =[earlystopping,model_checkpoint_callback]
+    #     # callbacks =[model_checkpoint_callback]
     # )
+
+    # # Reload best weights from the file
+    # model.load_weights(path+'checkpoint.h5')
+
+
+    # print(model.evaluate(val_ds))
 
     end = time.time()
     

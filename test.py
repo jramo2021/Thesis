@@ -4,31 +4,31 @@ from main import *
 
 class TestList(unittest.TestCase):
     
-    # '''Testing that train_ds is consistently taken from preprocessing'''
-    # def test_preprocess_gas_0(self):
-    #     '''Collect and Preprocess Data'''
-    #     # Download Data
-    #     data_dir = get_data()
+    '''Testing that train_ds is consistently taken from preprocessing'''
+    def test_preprocess_data_0(self):
+        '''Collect and Preprocess Data'''
+        # Download Data
+        data_dir = get_data()
         
-    #     # Preprocess Data (No data augmentation)
-    #     train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = 0)
-    #     ds1 = iter(train_ds)
-    #     train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = 0)
-    #     ds2 = iter(train_ds)
+        # Preprocess Data (No data augmentation)
+        train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = 0)
+        ds1 = iter(train_ds)
+        train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = 0)
+        ds2 = iter(train_ds)
         
-    #     for i in range(len(train_ds)):
-    #         images, labels1 = next(ds1)
-    #         images, labels2 = next(ds2)
+        for i in range(len(train_ds)):
+            images, labels1 = next(ds1)
+            images, labels2 = next(ds2)
             
-    #         labels1 = tf.constant(labels1).numpy()
-    #         labels2 = tf.constant(labels2).numpy()
-    #         # print(labels1) 
-    #         # print(labels2)
+            labels1 = tf.constant(labels1).numpy()
+            labels2 = tf.constant(labels2).numpy()
+            # print(labels1) 
+            # print(labels2)
             
-    #         self.assertTrue(np.array_equal(labels1,labels2))
+            self.assertTrue(np.array_equal(labels1,labels2))
         
     # '''Testing that val_ds is consistently taken from preprocessing'''
-    # def test_preprocess_gas_1(self):
+    # def test_preprocess_data_1(self):
     #     '''Collect and Preprocess Data'''
     #     # Download Data
     #     data_dir = get_data()
@@ -51,7 +51,7 @@ class TestList(unittest.TestCase):
     #         self.assertTrue(np.array_equal(labels1,labels2))
 
     # '''Testing that test_ds is consistently taken from preprocessing'''
-    # def test_preprocess_gas_2(self):
+    # def test_preprocess_data_2(self):
     #     '''Collect and Preprocess Data'''
     #     # Download Data
     #     data_dir = get_data()
@@ -78,7 +78,7 @@ class TestList(unittest.TestCase):
     #     the last batch may not be full. The full dataset size is 7909 samples,
     #     so dividing samples into batches of size of 32 will lead to a nonfull batch.
     #     This is expected. This double checks that the last batch is the expected size.'''
-    # def test_preprocess_gas_3(self):
+    # def test_preprocess_data_3(self):
     #     '''Collect and Preprocess Data'''
     #     # Download Data
     #     data_dir = get_data()
@@ -98,7 +98,7 @@ class TestList(unittest.TestCase):
     #     self.assertEqual(len(last),7909%32)
         
     # '''Checks that the ratio is consistent with different augmentation splits'''
-    # def test_preprocess_gas_4(self):
+    # def test_preprocess_data_4(self):
     #     '''Collect and Preprocess Data'''
     #     # Download Data
     #     data_dir = get_data()

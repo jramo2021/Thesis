@@ -1,6 +1,7 @@
 import os
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import datetime
 
 ''' Visualize File Structure:'''
 
@@ -90,3 +91,7 @@ def plot_history(history):
     plt.legend(['train', 'validation'], loc='upper left')
     plt.show()
     plt.savefig('/home/Thesis/Accuracy Plot.png')
+
+def time_estimate(training_time, test_time, remaining_i):
+    time_remaining = (training_time + test_time) * remaining_i
+    print('Estimated Time Left:',str(datetime.timedelta(seconds=time_remaining)))

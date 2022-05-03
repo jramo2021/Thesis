@@ -3,7 +3,6 @@ import os, pathlib
 import tensorflow as tf
 import time
 import matplotlib.pyplot as plt
-import copy
 import numpy as np
 
 def get_data():
@@ -26,7 +25,7 @@ def get_data():
         # Create the dataset path in the Docker container
         os.makedirs(path)
 
-        # Define Dataset url
+        # Define Dataset url (Download Link)
         dataset_url = "http://www.inf.ufpr.br/vri/databases/BreaKHis_v1.tar.gz"
 
         # Download data and define directory path
@@ -41,7 +40,7 @@ def get_data():
         end = time.time()
         print("\nDownloaded",image_count,"images in %0.2f" %(end - start),"seconds\n")
 
-    # Data is already downloaded
+    # Data is already downloaded. Define Path
     else:
         print('\nData Directory Exists\n')
         data_dir = '/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast'
@@ -51,11 +50,10 @@ def get_data():
 def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
     '''load and preprocess an image dataset using Keras preprocessing layers and utilities'''
     '''Create a dataset'''
-    # Typically standard size for smaller data sets (~1000 samples)
     
-    batch_size = 32 
     # img_size = 512
     img_size = 256
+    # img_size = 224 # Needed for KGG16 and Resnet architectures
 
     # Pull dataset from directory. Shuffle the dataset
     ds = tf.keras.utils.image_dataset_from_directory(
@@ -66,16 +64,11 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
         seed=123,
         image_size=(img_size, img_size),
         # image_size=(700, 460),
-        batch_size=batch_size,
+        batch_size=32,
         shuffle=True)
-        
-
-    print(len(ds))
     
     # Split the data: 80% training, 10% Validation, 10% testing
-    train_ds, val_ds, test_ds, aug_ds = get_dataset_partitions_tf(ds, len(ds),aug_split = aug_split)
-    
-
+    train_ds, val_ds, test_ds, aug_ds = get_dataset_partitions(ds, len(ds),aug_split = aug_split)
     
 
     # If augmentation split was valid, it will perform the augmentation 
@@ -101,53 +94,15 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
     # return train_ds, val_ds, test_ds, class_names
     return train_ds, val_ds, test_ds
 
-# def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
-#     assert (train_split + test_split + val_split) == 1
-    
-#     # Shuffling here might not be necessary
-#     if shuffle:
-#         # Specify seed to always have the same split distribution between runs
-#         ds = ds.shuffle(shuffle_size, seed=123)
-    
-#     total_size = train_split*(1+aug_size)+val_split + test_split
-    
-#     # Define the size of each split based on the ds_size
-#     train_size = int(train_split * ds_size)
-#     val_size = int(val_split * ds_size)
-#     aug_size = int(train_split * .2 * ds_size)
-    
-#     # Split the data: 80% training, 10% Validation, 10% testing
-#     train_ds = ds.take(train_size)
-#     aug_ds = ds.take(aug_size)    
-#     val_ds = ds.skip(train_size).take(val_size)
-#     test_ds = ds.skip(train_size).skip(val_size)
-#     print("\nTraining Set:",train_ds)
-#     print("\nAugmented Set:",aug_ds)
 
-#     return train_ds, val_ds, test_ds, aug_ds
-
-
-
-def get_dataset_partitions_tf(ds, ds_size, train_split=0.8, aug_split = 0, val_split=0.1, test_split=0.1, shuffle=True, shuffle_size=10000):
-    print(train_split + test_split + val_split)
+def get_dataset_partitions(ds, ds_size, train_split=0.8, aug_split = 0, val_split=0.1, test_split=0.1):
+    
+    # Check that split values sum to 1.
     assert (train_split + test_split + val_split) == 1
-    
-    # # Shuffling here might not be necessary
-    # if shuffle:
-    #     # Specify seed to always have the same split distribution between runs
-    #     ds = ds.shuffle(shuffle_size, seed=123)    
-
 
     # Expanded size accounts for adding the augmented data points
     expanded_size = 1 + train_split*aug_split
     val_size = int(val_split * expanded_size * ds_size)
-    
-    
-    # Split the data: 80% training, 10% Validation, 10% testing
-    # train_ds = ds.take(train_size)
-    # aug_ds = ds.take(aug_size)    
-    # val_ds = ds.skip(train_size).take(val_size)
-    # test_ds = ds.skip(train_size).skip(val_size)
     
     val_ds = ds.take(val_size)
     test_ds = ds.skip(val_size).take(val_size)

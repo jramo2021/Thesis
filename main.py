@@ -4,7 +4,7 @@ from classify import *
 import pandas as pd
 from matplotlib import pyplot as plt
 import itertools
-
+import copy
 
 
 def main():
@@ -13,86 +13,80 @@ def main():
     total_start = time.time()
 
     '''Collect and Preprocess Data'''
-    # Download Data
+    # Download Data and return directory that contains the data
     data_dir = get_data()
     
     # Preprocess Data (Data Augmentation and datasplit splits)
     train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = 0)
     
-    # Test 30 times because it is a stochastic process
-    results = []
-
-    '''Experimental line. maybe make iterable before testing'''
+    # Make the test_dataset an iterable object
     test_ds_copy = iter(test_ds)
-    for i in range(1):
+
+    # Train model many times because it is non deterministic
+    results = []
+    best_accuracy = 0
+    num_iterations = 50
+    for i in range(num_iterations):
         print("\n_______Test",i+1,"_______")
         
-        # test_ds, test_ds_copy = itertools.tee(test_ds_copy)
+        # Create copy of the datasets so that it can be reused
+        test_ds, test_ds_copy = itertools.tee(test_ds_copy)
 
-        '''Define, Train and Evaluate the Model'''
-        model, history, training_time = train(train_ds, val_ds)
+        # Define the Model
+        model = define_model()
 
+        # Train the Model
+        model, history, training_time = train(model, train_ds, val_ds)
+
+        # Start testing timer
+        start = time.time()
+        
+        # Extract True Labels from dataset and Predict Labels from images
+        true_labels, predicted_labels = predict_labels(model,test_ds)
+        # print(true_labels[:31],'\n',predicted_labels[:31])
+        
+        # Calculates TP, TN, FP, FN and total accuracy
+        results.append(calculate_metrics(true_labels, predicted_labels))
+        
+        # Include training time and test prediction and evaluation times
+        end = time.time()
+        test_time = end - start
+        results[i].extend([training_time, test_time])
+        
+        # Display an estimate for how much longer the testing will take
+        time_estimate(training_time, test_time, (num_iterations-i-1))
+
+        # Keep track of the best performing model. 
+        if results[i][0] > best_accuracy:
+            best_accuracy = results[i][0]
+            best_model = model
+            best_history = history
+    
         # # Evaluate the Model (classify test dataset)
         # results.append(model.evaluate(test_ds,batch_size=32))
-
-        # # Append the time it took to train the model to the results
         # results[i].append(training_time)
-    
-    #     # Calculates TP, TN, FP, FN and total accuracy
-    #     results.append(calculate_metrics(model,test_ds))
-    #     results[i].append(training_time)
-    
-    # display_pred_results(results)
-    # plot_results(results)
 
-    # Displays true labels compared to estimated labels for 32 samples. 
-    confirm_output(model, test_ds)
-    
+    # display_eval_results(results)
 
+    # # Displays true labels compared to estimated labels for 32 samples. (Proof of Concept)
+    # confirm_output(model, test_ds)
+    
+    '''Display Results'''
+    # Prints out Performance Metrics from the prediction of the test dataset 
+    display_pred_results(results)
+
+    # Plots the distribution of accuracies
+    plot_results(results)
+    
     # Plots the Loss and Accuracy over number of epochs
-    # plot_history(history)
+    plot_history(best_history)
     
-    
-#     '''Using Accuracy and MAE for Metrics'''
-#     df = pd.DataFrame(results, columns = ["loss", "accuracy","mae","time"])
-    
-    
-#     # Calculate Mean and Standard Deviation for Performance Metrics
-#     mean_loss = df["loss"].mean()
-#     mean_accuracy = df["accuracy"].mean()
-#     mean_mae = df["mae"].mean()
-#     mean_time = df["time"].mean()
-#     std_loss = df["loss"].std()
-#     std_accuracy = df["accuracy"].std()
-#     std_mae = df["mae"].std()
-#     std_time = df["time"].std()
+    # Print Final Time
+    total_end = time.time()
+    print('Total Time: %0.2f' % (total_end - total_start),"seconds")
 
-# # df = pd.DataFrame(results, columns = ["loss", "accuracy","mae","est","time"])
-
-# #     # Calculate Mean and Standard Deviation for Performance Metrics
-# #     mean_loss = df["loss"].mean()
-# #     mean_accuracy = df["accuracy"].mean()
-# #     mean_mae = df["mae"].mean()
-# #     mean_est = df["est"].mean()
-# #     mean_time = df["time"].mean()
-# #     std_loss = df["loss"].std()
-# #     std_accuracy = df["accuracy"].std()
-# #     std_mae = df["mae"].std()
-# #     std_est = df["est"].std()
-# #     std_time = df["time"].std()
-
-#     total_end = time.time()
-
-#     # Display Results
-#     print("\nFinal Results:")
-#     print('Loss: (%0.2f' % (mean_loss*100),u'\u00b1','%0.2f' % (std_loss*100)+')%')
-#     print('Accuracy: (%0.2f' % (mean_accuracy*100),u'\u00b1','%0.2f' % (std_accuracy*100)+')%')
-#     # print('Estimated Accuracy: (%0.2f' % (mean_est*100),u'\u00b1','%0.2f' % (std_est*100)+')%')
-#     print('Mean Absolute Error: %0.2f' % (mean_mae),u'\u00b1','%0.2f' % (std_mae))
-#     print('Avg Time: (%0.2f' % (mean_time),u'\u00b1','%0.2f' % (std_time)+') seconds')
-    
-#     total_end = time.time()
-#     print('Total Time: %0.2f' % (total_end - total_start),"seconds")
+    # Return the best model
+    return best_model 
 
 def confirm_output(model, test_ds):
     '''Confirms that the model predicts reasonable labels.
@@ -137,9 +131,9 @@ def confirm_output(model, test_ds):
     print('Evaluation Accuracy: %0.2f' % (mean_acc*100)+'%')
 
 
-'''Calculates Accuracy of for the model classifying the test data'''
-def calculate_metrics(model,test_ds):
-    
+'''Collects True Class Labels and Makes Label Predictions Based on the Images'''
+def predict_labels(model,test_ds):
+
     # Initialize Lists
     labels = []
     pred_labels = []
@@ -161,6 +155,9 @@ def calculate_metrics(model,test_ds):
         num += abs(pred_labels[i]-labels[i])
     print("accuracy:\n",(1-num/len(pred_labels)))
 
+    return labels, pred_labels
+
+def calculate_metrics(labels, pred_labels):
     # Calculate True/False Positive/Negative
     # Initialize count
     TP = 0
@@ -185,10 +182,30 @@ def calculate_metrics(model,test_ds):
     accuracy = (TN + TP)/total
     return [accuracy, TP/total, TN/total, FP/total, FN/total]
     
+def display_eval_results(results):
+    '''Using Accuracy and MAE for Metrics'''
+    df = pd.DataFrame(results, columns = ["loss", "accuracy","mae","time"])
+    
+    # Calculate Mean and Standard Deviation for Performance Metrics
+    mean_loss = df["loss"].mean()
+    mean_accuracy = df["accuracy"].mean()
+    mean_mae = df["mae"].mean()
+    mean_time = df["time"].mean()
+    std_loss = df["loss"].std()
+    std_accuracy = df["accuracy"].std()
+    std_mae = df["mae"].std()
+    std_time = df["time"].std()
+
+    # Display Results
+    print("\nFinal Results:")
+    print('Loss: (%0.2f' % (mean_loss*100),u'\u00b1','%0.2f' % (std_loss*100)+')%')
+    print('Accuracy: (%0.2f' % (mean_accuracy*100),u'\u00b1','%0.2f' % (std_accuracy*100)+')%')
+    print('Mean Absolute Error: %0.2f' % (mean_mae),u'\u00b1','%0.2f' % (std_mae))
+    print('Avg Time: (%0.2f' % (mean_time),u'\u00b1','%0.2f' % (std_time)+') seconds')
 
 def display_pred_results(results):
     '''Using Accuracy and MAE for Metrics'''
-    df = pd.DataFrame(results, columns = ["accuracy","TP","TN","FP","FN","training_time"])
+    df = pd.DataFrame(results, columns = ["accuracy","TP","TN","FP","FN","training_time","test_time"])
     
     # Calculate Mean for Performance Metrics
     mean_accuracy = df["accuracy"].mean()*100
@@ -196,7 +213,8 @@ def display_pred_results(results):
     mean_TN = df["TN"].mean()*100
     mean_FP = df["FP"].mean()*100
     mean_FN = df["FN"].mean()*100
-    mean_time = df["training_time"].mean()
+    mean_train_time = df["training_time"].mean()
+    mean_test_time = df["test_time"].mean()
 
     # Calculate Standard Deviation for Performance Metrics
     std_accuracy = df["accuracy"].std()*100
@@ -204,22 +222,32 @@ def display_pred_results(results):
     std_TN = df["TN"].std()*100
     std_FP = df["FP"].std()*100
     std_FN = df["FN"].std()*100
-    std_time = df["training_time"].std()
+    std_train_time = df["training_time"].std()
+    std_test_time = df["test_time"].std()
 
+    # Calculate Median and Range of Accuracy values
+    med_accuracy = df["accuracy"].median()*100
+    min_accuracy = df["accuracy"].min()*100
+    max_accuracy = df["accuracy"].max()*100
 
     # Display Results
     print("\nFinal Results:")
-    print('Accuracy: (%0.2f' % (mean_accuracy),u'\u00b1','%0.2f' % (std_accuracy)+')%')
+    print('Mean Accuracy: (%0.2f' % (mean_accuracy),u'\u00b1','%0.2f' % (std_accuracy)+')%')
+    print('Median Accuracy: %0.2f' % (med_accuracy))
+    print('Accuracy Range: [%0.2f, %0.2f' % (min_accuracy,max_accuracy)+']')
     print('True Positive: (%0.2f' % (mean_TP),u'\u00b1','%0.2f' % (std_TP)+')%')
     print('True Negative: (%0.2f' % (mean_TN),u'\u00b1','%0.2f' % (std_TN)+')%')
     print('False Positive: (%0.2f' % (mean_FP),u'\u00b1','%0.2f' % (std_FP)+')%')
     print('False Negative: (%0.2f' % (mean_FN),u'\u00b1','%0.2f' % (std_FN)+')%')
-    print('Avg Training Time: (%0.2f' % (mean_time),u'\u00b1','%0.2f' % (std_time)+') seconds')
+    print('Avg Training Time: (%0.2f' % (mean_train_time),u'\u00b1','%0.2f' % (std_train_time)+') seconds')
+    print('Avg Test Eval Time: (%0.2f' % (mean_test_time),u'\u00b1','%0.2f' % (std_test_time)+') seconds')
         
 def plot_results(results):
     '''Using Accuracy and MAE for Metrics'''
-    df = pd.DataFrame(results, columns = ["accuracy","TP","TN","FP","FN","training_time"])
-
+    
+    
+    df = pd.DataFrame(results, columns = ["accuracy","TP","TN","FP","FN","training_time","test_time"])
+    
     accuracy = [element * 100 for element in df["accuracy"]]
 
 
