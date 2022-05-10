@@ -17,7 +17,7 @@ def main():
     data_dir = get_data()
     
     # Preprocess Data (Data Augmentation and datasplit splits)
-    train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = 0)
+    train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = .2)
     
     # Make the test_dataset an iterable object
     test_ds_copy = iter(test_ds)
@@ -25,7 +25,7 @@ def main():
     # Train model many times because it is non deterministic
     results = []
     best_accuracy = 0
-    num_iterations = 50
+    num_iterations = 1
     for i in range(num_iterations):
         print("\n_______Test",i+1,"_______")
         
@@ -62,9 +62,13 @@ def main():
             best_model = model
             best_history = history
     
-        # # Evaluate the Model (classify test dataset)
-        # results.append(model.evaluate(test_ds,batch_size=32))
-        # results[i].append(training_time)
+    #     # Evaluate the Model (classify test dataset)
+    #     results.append(model.evaluate(test_ds,batch_size=32))
+    #     results[i].append(training_time)
+        
+    #     # Evaluate the Model (classify test dataset)
+    #     results.append(model.evaluate(test_ds,batch_size=32))
+    #     results[i].append(training_time)
 
     # display_eval_results(results)
 

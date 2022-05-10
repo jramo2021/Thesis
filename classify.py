@@ -6,23 +6,13 @@ import time
 # Example from https://www.tensorflow.org/tutorials/load_data/images
 def define_model():
 
-    '''Create model (Original)'''
-    model = tf.keras.Sequential([
-        tf.keras.layers.Rescaling(1./255),
-        tf.keras.layers.Conv2D(32, 3, activation='relu'),
-        tf.keras.layers.MaxPooling2D(),
-        tf.keras.layers.Conv2D(32, 3, activation='relu'),
-        tf.keras.layers.MaxPooling2D(),
-        tf.keras.layers.Conv2D(32, 3, activation='relu'),
-        tf.keras.layers.MaxPooling2D(),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dense(2)
-    ])
-
-    # '''Create model (Mod 1)'''
+    # '''Create model (Original)'''
     # model = tf.keras.Sequential([
     #     tf.keras.layers.Rescaling(1./255),
+    #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    #     tf.keras.layers.MaxPooling2D(),
+    #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    #     tf.keras.layers.MaxPooling2D(),
     #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
     #     tf.keras.layers.MaxPooling2D(),
     #     tf.keras.layers.Flatten(),
@@ -30,7 +20,17 @@ def define_model():
     #     tf.keras.layers.Dense(2)
     # ])
 
-    # '''Create model (Mod 2)'''
+    '''Model 1.1'''
+    model = tf.keras.Sequential([
+        tf.keras.layers.Rescaling(1./255),
+        tf.keras.layers.Conv2D(32, 3, activation='relu'),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dense(2)
+    ])
+
+    # '''Model 1.2'''
     # model = tf.keras.Sequential([
     #     tf.keras.layers.Rescaling(1./255),
     #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
@@ -40,37 +40,28 @@ def define_model():
     #     tf.keras.layers.Dense(2)
     # ])
 
-    # '''Create model (Mod 3)'''
+    # '''Model 1.3'''
     # model = tf.keras.Sequential([
     #     tf.keras.layers.Rescaling(1./255),
-    #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    #     tf.keras.layers.Conv2D(64, 3, activation='relu'),
     #     tf.keras.layers.MaxPooling2D(),
     #     tf.keras.layers.Flatten(),
     #     tf.keras.layers.Dense(128, activation='relu'),
     #     tf.keras.layers.Dense(2)
     # ])
 
-    # '''Create model (Mod 4)'''
-    # # Maxed out memory after 5 runs
+    # '''Model 1.4'''
     # model = tf.keras.Sequential([
     #     tf.keras.layers.Rescaling(1./255),
     #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
     #     tf.keras.layers.MaxPooling2D(),
+    #     tf.keras.layers.Dropout(0.2),
     #     tf.keras.layers.Flatten(),
-    #     tf.keras.layers.Dense(1024, activation='relu'),
+    #     tf.keras.layers.Dense(128, activation='relu'),
     #     tf.keras.layers.Dense(2)
     # ])
     
-    # '''Create model (Mod 5)'''
-    # # Maxed out memory after 16 runs
-    # model = tf.keras.Sequential([
-    #     tf.keras.layers.Rescaling(1./255),
-    #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
-    #     tf.keras.layers.MaxPooling2D(),
-    #     tf.keras.layers.Flatten(),
-    #     tf.keras.layers.Dense(512, activation='relu'),
-    #     tf.keras.layers.Dense(2)
-    # ])
+    
     
 
     # '''ResNet model'''
@@ -81,16 +72,6 @@ def define_model():
     #     include_top=True,
     #     weights=None,
     #     classes=2)
-
-    # '''VGG16 model'''
-    # model = tf.keras.Sequential([
-    #     tf.keras.applications.vgg16.preprocess_input(
-    #         x, data_format=None),
-    #     tf.keras.applications.vgg16.VGG16(
-    #         include_top=True,
-    #         weights=None,
-    #         classes=2)
-    # )]    
     
 
     # To view the training and validation accuracy for each training epoch, 
@@ -104,12 +85,6 @@ def define_model():
         # loss=tf.losses.SparseCategoricalCrossentropy(from_logits=False),
         metrics=['accuracy','mae'])
 
-    # # Terrible Implementation 
-    # model.compile(
-    #     optimizer='adam',
-    #     loss=tf.keras.losses.BinaryCrossentropy(),
-    #     metrics=['accuracy','mae'])
-
     return model
 
 def train(model,train_ds,val_ds):
@@ -117,13 +92,15 @@ def train(model,train_ds,val_ds):
     # Start Training Timer
     start = time.time()
 
+ 
     '''Fit data to model using 3 epochs'''
     history = model.fit(
         train_ds,
         validation_data=val_ds,
-        epochs=3
+        epochs=25
     )
 
+    
     # '''Fit data to model using 25 epochs and early stopping'''
     # # https://www.geeksforgeeks.org/choose-optimal-number-of-epochs-to-train-a-neural-network-in-keras/
     # # Early Stopping Call back will stop training if the model 

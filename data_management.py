@@ -67,8 +67,10 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
         batch_size=32,
         shuffle=True)
     
+    
+
     # Split the data: 80% training, 10% Validation, 10% testing
-    train_ds, val_ds, test_ds, aug_ds = get_dataset_partitions(ds, len(ds),aug_split = aug_split)
+    train_ds, val_ds, test_ds, aug_ds = get_dataset_partitions(ds,aug_split = aug_split)
     
 
     # If augmentation split was valid, it will perform the augmentation 
@@ -95,14 +97,14 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
     return train_ds, val_ds, test_ds
 
 
-def get_dataset_partitions(ds, ds_size, train_split=0.8, aug_split = 0, val_split=0.1, test_split=0.1):
+def get_dataset_partitions(ds, train_split=0.8, aug_split = 0, val_split=0.1, test_split=0.1):
     
     # Check that split values sum to 1.
     assert (train_split + test_split + val_split) == 1
 
     # Expanded size accounts for adding the augmented data points
     expanded_size = 1 + train_split*aug_split
-    val_size = int(val_split * expanded_size * ds_size)
+    val_size = int(val_split * expanded_size * len(ds))
     
     val_ds = ds.take(val_size)
     test_ds = ds.skip(val_size).take(val_size)
@@ -111,9 +113,8 @@ def get_dataset_partitions(ds, ds_size, train_split=0.8, aug_split = 0, val_spli
     print('Test_ds length',val_size)
     # Only perform augmentation if the range is valid
     if aug_split > 0 and aug_split <=1:
-        # Define the size of each split based on the ds_size and the splits
-        # train_size = int(train_split * ds_size)
-        aug_size = int(train_split * ds_size * aug_split)
+        # Define the size of each split based on the dataset size and the splits
+        aug_size = int(train_split * len(ds) * aug_split)
         aug_ds = ds.skip(val_size).skip(val_size).take(aug_size)
     else:
         aug_ds = None
@@ -122,9 +123,7 @@ def get_dataset_partitions(ds, ds_size, train_split=0.8, aug_split = 0, val_spli
 
 def augment_data(train_ds,aug_ds):
     '''Define Augmentations'''
-    # resize_and_rescale = tf.keras.Sequential([
-    #     tf.keras.layers.Resizing(700, 460),
-    # ])
+
 
     # Performs random rotation and flip
     rot_and_flip_aug = tf.keras.Sequential([
@@ -135,31 +134,14 @@ def augment_data(train_ds,aug_ds):
     # Applies rotation and flip to the data
     # The parallel call makes it so that it runs the rotation and 
     # flip process in parallel with mapping it to the data. Making 
-    # the training take much less time (~244s -> ~112s)
+    # the training take much less time
     AUTOTUNE = tf.data.AUTOTUNE
     aug_ds = aug_ds.map(
         lambda x, y: (rot_and_flip_aug(x, training=True), y),num_parallel_calls=AUTOTUNE)
 
-    # images, label = next(iter(train_ds))
-    # print('\nBefore Concatenation')
-    # print("number of training batches:",len(train_ds))
-    # print('Batch_size:',len(images))
-    # print('Rows:',len(images[0]))
-    # print('Columns:',len(images[0][0]))
-    # print('RGB:',len(images[0][0][0]))
 
     # Append the augmented data to the training data
     train_ds = train_ds.concatenate(aug_ds)
-    
-    # print('\nAfter Concatenation')
-    # images, label = next(iter(train_ds))
-    # print("number of training batches:",len(train_ds))
-    # print('Batch_size:',len(images))
-    # print('Rows:',len(images[0]))
-    # print('Columns:',len(images[0][0]))
-    # print('RGB:',len(images[0][0][0]))
-    
-    # train_ds = train_ds.shuffle(shuffle_size, seed = 123)
     
     # Show some augmentations
     visualize_augmentations(train_ds,rot_and_flip_aug,filename = "augmentations")
