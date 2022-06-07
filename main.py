@@ -17,8 +17,8 @@ def main():
     data_dir = get_data()
     
     # Preprocess Data (Data Augmentation and datasplit splits)
-    train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = .2)
-    
+    train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = 0)
+    display_image(['Benign','Malignant'],train_ds,filename = "700x460")
     # Make the test_dataset an iterable object
     test_ds_copy = iter(test_ds)
 
@@ -66,14 +66,11 @@ def main():
     #     results.append(model.evaluate(test_ds,batch_size=32))
     #     results[i].append(training_time)
         
-    #     # Evaluate the Model (classify test dataset)
-    #     results.append(model.evaluate(test_ds,batch_size=32))
-    #     results[i].append(training_time)
 
     # display_eval_results(results)
 
-    # # Displays true labels compared to estimated labels for 32 samples. (Proof of Concept)
-    # confirm_output(model, test_ds)
+    # # # Displays true labels compared to estimated labels for 32 samples. (Proof of Concept)
+    # # confirm_output(model, test_ds)
     
     '''Display Results'''
     # Prints out Performance Metrics from the prediction of the test dataset 
@@ -154,6 +151,9 @@ def predict_labels(model,test_ds):
         temp_pred_labels = prediction.argmax(axis=-1)
         pred_labels.extend(temp_pred_labels)
 
+    # print(temp_labels[:6])
+    # print(prediction[:6])
+    # print(temp_pred_labels[:6])
     num = 0
     for i in range(len(labels)):
         num += abs(pred_labels[i]-labels[i])
@@ -179,8 +179,8 @@ def calculate_metrics(labels, pred_labels):
             FP += 1     # False Positive
         elif labels[i] == 1 and pred_labels[i] == 0:
             FN += 1     # False Negative
-        else:   # If labels aren't binary, raise error
-            raise ValueError("Labels are not binary")
+        # else:   # If labels aren't binary, raise error
+        #     raise ValueError("Labels are not binary")
 
     # Calculate Accuracy and return results
     accuracy = (TN + TP)/total

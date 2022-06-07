@@ -124,7 +124,6 @@ def get_dataset_partitions(ds, train_split=0.8, aug_split = 0, val_split=0.1, te
 def augment_data(train_ds,aug_ds):
     '''Define Augmentations'''
 
-
     # Performs random rotation and flip
     rot_and_flip_aug = tf.keras.Sequential([
         tf.keras.layers.RandomFlip("horizontal_and_vertical",seed=123),
@@ -139,13 +138,10 @@ def augment_data(train_ds,aug_ds):
     aug_ds = aug_ds.map(
         lambda x, y: (rot_and_flip_aug(x, training=True), y),num_parallel_calls=AUTOTUNE)
 
-
     # Append the augmented data to the training data
     train_ds = train_ds.concatenate(aug_ds)
     
     # Show some augmentations
     visualize_augmentations(train_ds,rot_and_flip_aug,filename = "augmentations")
 
-    print(len(train_ds))
     return train_ds
-

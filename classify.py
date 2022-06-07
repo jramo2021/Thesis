@@ -6,7 +6,7 @@ import time
 # Example from https://www.tensorflow.org/tutorials/load_data/images
 def define_model():
 
-    # '''Create model (Original)'''
+    # '''Create model (Model 1.0)'''
     # model = tf.keras.Sequential([
     #     tf.keras.layers.Rescaling(1./255),
     #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
@@ -17,8 +17,7 @@ def define_model():
     #     tf.keras.layers.MaxPooling2D(),
     #     tf.keras.layers.Flatten(),
     #     tf.keras.layers.Dense(128, activation='relu'),
-    #     tf.keras.layers.Dense(2)
-    # ])
+    #     tf.keras.layers.Dense(2)])
 
     '''Model 1.1'''
     model = tf.keras.Sequential([
@@ -63,15 +62,22 @@ def define_model():
     
     
     
-
-    # '''ResNet model'''
+    # '''ResNet model (default: imagenet and 1000 classes)'''
     # model = tf.keras.applications.resnet50.ResNet50()
 
-    # '''VGG16 model'''
-    # model = tf.keras.applications.vgg16.VGG16(
+    # '''ResNet model (No pretraining weights and 2 classes)'''
+    # model = tf.keras.applications.resnet50.ResNet50(
     #     include_top=True,
-    #     weights=None,
-    #     classes=2)
+    #     classes = 2,
+    #     weights = None
+    #     # weights = 'imagenet'
+    # )
+
+    # '''VGG16 model'''
+    # model = tf.keras.applications.vgg16.VGG16()
+    #     # include_top=True,
+    #     # weights=None,
+    #     # classes=2)
     
 
     # To view the training and validation accuracy for each training epoch, 
@@ -82,7 +88,7 @@ def define_model():
     model.compile(
         optimizer='adam',
         loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
-        # loss=tf.losses.SparseCategoricalCrossentropy(from_logits=False),
+        # loss=tf.losses.SparseCategoricalCrossentropy(from_logits=False), # ResNet and VGG16
         metrics=['accuracy','mae'])
 
     return model
@@ -97,7 +103,7 @@ def train(model,train_ds,val_ds):
     history = model.fit(
         train_ds,
         validation_data=val_ds,
-        epochs=25
+        epochs=3
     )
 
     

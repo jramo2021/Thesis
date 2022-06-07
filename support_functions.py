@@ -20,6 +20,7 @@ def tree_file_printer(root):
             print (os.path.join(root, f))
 
 # tree_directory_printer('C:/Users/Ross/OneDrive/Documents/Thesis')
+
 '''Visualizations'''
 def visualize_sample_data(class_names,train_ds,filename = "visualize_sample_data"):
     # Save sample images of training data
@@ -34,18 +35,18 @@ def visualize_sample_data(class_names,train_ds,filename = "visualize_sample_data
     # Save image
     plt.savefig('/home/Thesis/'+filename+'.png')
 
-# def visualize_augmentation(original, augmented, filename = 'augemented'):
-#     fig = plt.figure()
-#     plt.subplot(1,2,1)
-#     plt.title('Original image')
-#     plt.imshow(original)
 
-#     plt.subplot(1,2,2)
-#     plt.title('Augmented image')
-#     plt.imshow(augmented)
+'''Display image'''
+def display_image(class_names,train_ds,filename = "single image"):
+    # Save sample images of training data
+    plt.figure()
+    for images, labels in train_ds.take(1):
+        plt.imshow(images[0].numpy().astype("uint8"))
+        plt.title(class_names[labels[0]])
+        plt.axis("off")
 
-#     # Save image
-#     plt.savefig('/home/Thesis/'+ filename +'.png')
+    # Save image
+    plt.savefig('/home/Thesis/'+filename+'.png')
 
 
 def visualize_augmentations(train_ds,rot_and_flip_aug,filename = "augmentations"):
