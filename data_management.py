@@ -56,21 +56,42 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0):
     # img_size = 224 # Needed for KGG16 and Resnet architectures
 
     # Pull dataset from directory. Shuffle the dataset
-    ds = tf.keras.utils.image_dataset_from_directory(
-        data_dir,
+    train_ds = tf.keras.utils.image_dataset_from_directory(
+        '/tmp/.keras/datasets/TrainTestValData/Train',
         # Try grayscale
         # color_mode="grayscale",
         color_mode = color_mode,
         seed=123,
         image_size=(img_size, img_size),
         # image_size=(700, 460),
-        batch_size=32,
+        batch_size=16,
         shuffle=True)
     
-    
+    test_ds = tf.keras.utils.image_dataset_from_directory(
+        '/tmp/.keras/datasets/TrainTestValData/Test',
+        # Try grayscale
+        # color_mode="grayscale",
+        color_mode = color_mode,
+        seed=123,
+        image_size=(img_size, img_size),
+        # image_size=(700, 460),
+        batch_size=16,
+        shuffle=True)
 
+    val_ds = tf.keras.utils.image_dataset_from_directory(
+        '/tmp/.keras/datasets/TrainTestValData/Val',
+        # Try grayscale
+        # color_mode="grayscale",
+        color_mode = color_mode,
+        seed=123,
+        image_size=(img_size, img_size),
+        # image_size=(700, 460),
+        batch_size=16,
+        shuffle=True)
+
+    aug_ds = None
     # Split the data: 80% training, 10% Validation, 10% testing
-    train_ds, val_ds, test_ds, aug_ds = get_dataset_partitions(ds,aug_split = aug_split)
+    #train_ds, val_ds, test_ds, aug_ds = get_dataset_partitions(ds,aug_split = aug_split)
     
 
     # If augmentation split was valid, it will perform the augmentation 

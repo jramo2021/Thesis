@@ -25,7 +25,7 @@ def main():
     # Train model many times because it is non deterministic
     results = []
     best_accuracy = 0
-    num_iterations = 1
+    num_iterations = 50
     for i in range(num_iterations):
         print("\n_______Test",i+1,"_______")
         
@@ -43,7 +43,7 @@ def main():
         
         # Extract True Labels from dataset and Predict Labels from images
         true_labels, predicted_labels = predict_labels(model,test_ds)
-        # print(true_labels[:31],'\n',predicted_labels[:31])
+        print(true_labels[:31],'\n',predicted_labels[:31])
         
         # Calculates TP, TN, FP, FN and total accuracy
         results.append(calculate_metrics(true_labels, predicted_labels))
@@ -69,8 +69,8 @@ def main():
 
     # display_eval_results(results)
 
-    # # # Displays true labels compared to estimated labels for 32 samples. (Proof of Concept)
-    # # confirm_output(model, test_ds)
+    # # Displays true labels compared to estimated labels for 32 samples. (Proof of Concept)
+    # confirm_output(model, test_ds)
     
     '''Display Results'''
     # Prints out Performance Metrics from the prediction of the test dataset 

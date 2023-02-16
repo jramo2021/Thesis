@@ -5,7 +5,6 @@ import time
 
 # Example from https://www.tensorflow.org/tutorials/load_data/images
 def define_model():
-
     # '''Create model (Model 1.0)'''
     # model = tf.keras.Sequential([
     #     tf.keras.layers.Rescaling(1./255),
@@ -103,7 +102,7 @@ def train(model,train_ds,val_ds):
     history = model.fit(
         train_ds,
         validation_data=val_ds,
-        epochs=3
+        epochs=25
     )
 
     
