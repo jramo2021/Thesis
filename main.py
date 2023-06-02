@@ -5,10 +5,12 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import itertools
 import copy
+import math
 
 
 def main():
     
+    tf.debugging.set_log_device_placement(True)
     # Start Timer
     total_start = time.time()
 
@@ -17,8 +19,8 @@ def main():
     data_dir = get_data()
     
     # Preprocess Data (Data Augmentation and datasplit splits)
-    train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = 0)
-    display_image(['Benign','Malignant'],train_ds,filename = "700x460")
+    train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = 0,split_by_patient = True,balance_dataset=False)
+    #display_image(['Benign','Malignant'],train_ds,filename = "700x460")
     # Make the test_dataset an iterable object
     test_ds_copy = iter(test_ds)
 
@@ -219,6 +221,10 @@ def display_pred_results(results):
     mean_FN = df["FN"].mean()*100
     mean_train_time = df["training_time"].mean()
     mean_test_time = df["test_time"].mean()
+    mean_precision = ((mean_TP)/(mean_TP + mean_FP)) * 100
+    mean_recall = ((mean_TP)/(mean_TP + mean_FN)) * 100
+    mean_f1_score = 2 * mean_precision * mean_recall / (mean_precision + mean_recall)
+    mean_mcc = ((mean_TP * mean_TN) - (mean_FP * mean_FN))/ ((mean_TP+mean_FN)*(mean_TP+mean_FP)*(mean_FP+mean_TN)*(mean_TN+mean_FN))**(0.5)
 
     # Calculate Standard Deviation for Performance Metrics
     std_accuracy = df["accuracy"].std()*100
@@ -243,6 +249,10 @@ def display_pred_results(results):
     print('True Negative: (%0.2f' % (mean_TN),u'\u00b1','%0.2f' % (std_TN)+')%')
     print('False Positive: (%0.2f' % (mean_FP),u'\u00b1','%0.2f' % (std_FP)+')%')
     print('False Negative: (%0.2f' % (mean_FN),u'\u00b1','%0.2f' % (std_FN)+')%')
+    print('Mean Precision: (%0.2f' % (mean_precision)+')%')
+    print('Mean Recall: (%0.2f' % (mean_recall)+')%')
+    print('Mean F1-Score: (%0.2f' % (mean_f1_score)+')%')
+    print('Mean MCC: (%0.2f' % (mean_mcc)+')')
     print('Avg Training Time: (%0.2f' % (mean_train_time),u'\u00b1','%0.2f' % (std_train_time)+') seconds')
     print('Avg Test Eval Time: (%0.2f' % (mean_test_time),u'\u00b1','%0.2f' % (std_test_time)+') seconds')
         
