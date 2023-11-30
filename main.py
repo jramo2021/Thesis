@@ -10,7 +10,7 @@ import math
 
 def main():
     
-    tf.debugging.set_log_device_placement(True)
+    #tf.debugging.set_log_device_placement(True)
     # Start Timer
     total_start = time.time()
 
@@ -19,7 +19,7 @@ def main():
     data_dir = get_data()
     
     # Preprocess Data (Data Augmentation and datasplit splits)
-    train_ds, val_ds, test_ds = preprocess_data(data_dir,aug_split = 0,split_by_patient = True,balance_dataset=False)
+    train_ds, val_ds, test_ds = preprocess_data(data_dir,split_by_patient = True,balance_dataset=False)
     #display_image(['Benign','Malignant'],train_ds,filename = "700x460")
     # Make the test_dataset an iterable object
     test_ds_copy = iter(test_ds)

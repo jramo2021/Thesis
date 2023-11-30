@@ -187,8 +187,8 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0, split_by_patient
     '''Create a dataset'''
 
     #img_size = 512
-    img_size = 256
-    # img_size = 224 # Needed for KGG16 and Resnet architectures
+    # img_size = 256
+    img_size = 224 # Needed for KGG16 and Resnet architectures
     if split_by_patient & ~balance_dataset:
         if not os.path.isdir('/tmp/.keras/TrainTestValData'):
             organizePatientPartition()
@@ -227,19 +227,19 @@ def preprocess_data(data_dir, color_mode = 'rgb',aug_split = 0, split_by_patient
             shuffle=True)
 
         # augments data if uncommented
-        rot_flip_zoom_aug = tf.keras.Sequential([
-            tf.keras.layers.RandomFlip("horizontal",seed=123),
-            tf.keras.layers.RandomRotation(factor=0.35,seed=123),
-            tf.keras.layers.RandomZoom(height_factor = (-0.3, 0), seed=123)
-            ])
+        # rot_flip_zoom_aug = tf.keras.Sequential([
+        #     tf.keras.layers.RandomFlip("horizontal",seed=123),
+        #     tf.keras.layers.RandomRotation(factor=0.35,seed=123),
+        #     tf.keras.layers.RandomZoom(height_factor = (-0.3, 0), seed=123)
+        #     ])
         
-        tmp_ds = train_ds.map(
-        lambda x, y: (rot_flip_zoom_aug(x, training=True), y),num_parallel_calls=tf.data.AUTOTUNE)
+        # tmp_ds = train_ds.map(
+        # lambda x, y: (rot_flip_zoom_aug(x, training=True), y),num_parallel_calls=tf.data.AUTOTUNE)
 
-        #visualize_augmentations(train_ds, rot_flip_zoom_aug)
+        # #visualize_augmentations(train_ds, rot_flip_zoom_aug)
 
-        train_ds = train_ds.concatenate(tmp_ds)
-        train_ds = train_ds.shuffle(len(train_ds))
+        # train_ds = train_ds.concatenate(tmp_ds)
+        # train_ds = train_ds.shuffle(len(train_ds))
 
     elif balance_dataset & ~split_by_patient:
         #creates a balanced data set by taking 1000 images from each subclass at random 

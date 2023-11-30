@@ -7,17 +7,17 @@ import h5py as h5
 # Example from https://www.tensorflow.org/tutorials/load_data/images
 def define_model():
     '''Create model (Model 1.0)'''
-    model = tf.keras.Sequential([
-        tf.keras.layers.Rescaling(1./255),
-        tf.keras.layers.Conv2D(32, 3, activation='relu'),
-        tf.keras.layers.MaxPooling2D(),
-        tf.keras.layers.Conv2D(32, 3, activation='relu'),
-        tf.keras.layers.MaxPooling2D(),
-        tf.keras.layers.Conv2D(32, 3, activation='relu'),
-        tf.keras.layers.MaxPooling2D(),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dense(2)])
+    # model = tf.keras.Sequential([
+    #     tf.keras.layers.Rescaling(1./255),
+    #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    #     tf.keras.layers.MaxPooling2D(),
+    #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    #     tf.keras.layers.MaxPooling2D(),
+    #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
+    #     tf.keras.layers.MaxPooling2D(),
+    #     tf.keras.layers.Flatten(),
+    #     tf.keras.layers.Dense(128, activation='relu'),
+    #     tf.keras.layers.Dense(2)])
 
     # '''Model 1.1'''
     # model = tf.keras.Sequential([
@@ -100,19 +100,19 @@ def define_model():
     # '''ResNet model (default: imagenet and 1000 classes)'''
     # model = tf.keras.applications.resnet50.ResNet50()
 
-    # '''ResNet model (No pretraining weights and 2 classes)'''
+    '''ResNet model (No pretraining weights and 2 classes)'''
     # model = tf.keras.applications.resnet50.ResNet50(
     #     include_top=True,
     #     classes = 2,
-    #     weights = None
-    #     # weights = 'imagenet'
-    # )
+    #     #weights = None
+    #     weights = 'imagenet'
+    #)
 
-    # '''VGG16 model'''
-    # model = tf.keras.applications.vgg16.VGG16()
-    #     # include_top=True,
-    #     # weights=None,
-    #     # classes=2)
+    '''VGG16 model'''
+    # model = tf.keras.applications.vgg16.VGG16(
+    #      include_top=True,
+    #      weights=None,
+    #      classes=2)
     
 
     # To view the training and validation accuracy for each training epoch, 
@@ -123,10 +123,10 @@ def define_model():
 
     '''Compile the Model'''
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
-        loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
+        optimizer=tf.keras.optimizers.Adam(learning_rate = 1e-20),#learning_rate=1e-5),
+        #loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
         #loss = tf.keras.losses.BinaryCrossentropy(from_logits=True),
-        # loss=tf.losses.SparseCategoricalCrossentropy(from_logits=False), # ResNet and VGG16
+        loss=tf.losses.SparseCategoricalCrossentropy(from_logits=False), # ResNet and VGG16
         metrics=['accuracy','mae'])
 
     return model
