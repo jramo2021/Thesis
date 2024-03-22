@@ -65,8 +65,8 @@ def main():
             best_history = history
     
     #     # Evaluate the Model (classify test dataset)
-    #     results.append(model.evaluate(test_ds,batch_size=32))
-    #     results[i].append(training_time)
+        results.append(model.evaluate(test_ds,batch_size=32))
+        results[i].append(training_time)
         
 
     # display_eval_results(results)

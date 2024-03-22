@@ -1,9 +1,6 @@
-import os, pathlib
-import random
+import os
 import shutil
-import tensorflow as tf
-import time
-import glob
+import random
 
 PatientArray = [
     "/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast/benign/SOB/adenosis/SOB_B_A_14-22549AB",
@@ -90,159 +87,54 @@ PatientArray = [
     "/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast/malignant/SOB/papillary_carcinoma/SOB_M_PC_15-190EF",
 ]   
 
-subclassPathArray = [
-    "/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast/benign/SOB/adenosis/",
-    "/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast/benign/SOB/fibroadenoma/",
-    "/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast/benign/SOB/phyllodes_tumor/",
-    "/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast/benign/SOB/tubular_adenoma/",
-    "/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast/malignant/SOB/ductal_carcinoma/",
-    "/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast/malignant/SOB/lobular_carcinoma/",
-    "/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast/malignant/SOB/mucinous_carcinoma/",
-    "/tmp/.keras/datasets/BreaKHis_v1/histology_slides/breast/malignant/SOB/papillary_carcinoma/"
-]
+magnification = ['40X', '100X', '200X', '400X']
 
-path = "/tmp/.keras/datasets"
-    
-if not os.path.isdir(path):
-    start = time.time()
-    
-    print('\n')
-    
-    # Create the dataset path in the Docker container
-    os.makedirs(path)
+# Output directory where organized folders will be created
+output_path = "/tmp/.keras/datasets/"
 
-    # Define Dataset url (Download Link)
-    dataset_url = "http://www.inf.ufpr.br/vri/databases/BreaKHis_v1.tar.gz"
+# Create Train Test Val directories for each 
+for magni in magnification:
+    Tr_ben = os.path.join(output_path, magni, 'Train', 'benign')
+    Tr_mal = os.path.join(output_path, magni, 'Train', 'malignant')
+    T_ben = os.path.join(output_path, magni, 'Test', 'benign')
+    T_mal = os.path.join(output_path, magni, 'Test', 'malignant')
+    V_ben = os.path.join(output_path, magni, 'Val', 'benign')
+    V_mal = os.path.join(output_path, magni, 'Val', 'malignant')
+    os.makedirs(Tr_ben, exist_ok=True)
+    os.makedirs(Tr_mal, exist_ok=True)
+    os.makedirs(T_ben, exist_ok=True)
+    os.makedirs(T_mal, exist_ok=True)
+    os.makedirs(V_ben, exist_ok=True)
+    os.makedirs(V_mal, exist_ok=True)
 
-    # Download data and define directory path
-    data_dir = tf.keras.utils.get_file(fname=None,
-        origin=dataset_url,
-        untar=True)
-    data_dir = pathlib.Path(data_dir)/'histology_slides/breast/'
-    
-    # Shows how many images were downloaded this time
-    image_count = len(list(data_dir.glob('**/*.png')))
-
-    end = time.time()
-    print("\nDownloaded",image_count,"images in %0.2f" %(end - start),"seconds\n")
-
+# Extract patients from patient array
+patients = [x.split('/')[-1] for x in PatientArray]
 
 random.seed(321) #321
-destPath = "/tmp/.keras/TrainTestValData"
-if not os.path.isdir(destPath):
-    os.mkdir(destPath)
-    os.makedirs(destPath + '/Train/benign/')
-    os.makedirs(destPath + '/Train/malignant/')
-    os.makedirs(destPath + '/Test/benign/')
-    os.makedirs(destPath + '/Test/malignant/')
-    os.makedirs(destPath + '/Val/benign/')
-    os.makedirs(destPath + '/Val/malignant/')
+order = random.sample(range(0, 82), 82)
 
+#can adjust split by changing this number 25 = ~30% for testing (70% in training, 20% of training in val )
+test = order[:25] #25 patients
+train = order[25:71] #46 patients
+val = order[71:] #11 patients
 
-percentageinTestandVal = 0.1
-for subclass in subclassPathArray:
-    count = 0
-    if 'adenosis' in subclass:
-        patients = [name for name in os.listdir(subclass)]
-        order = random.sample(range(len(patients)), k=len(patients))
-        for i in order:
-            if count < len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1):
-                shutil.copytree(subclass + patients[i], destPath + '/Train/benign/' + patients[i])
-                count += 1
-            elif count >= (len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1)) and (count < len(patients) - (int(percentageinTestandVal*len(patients)) + 1)):
-                shutil.copytree(subclass + patients[i], destPath + '/Test/benign/' + patients[i])
-                count += 1
-            else:
-                shutil.copytree(subclass + patients[i], destPath + '/Val/benign/' + patients[i])
-                count += 1
-    elif 'fibroadenoma' in subclass:
-        patients = [name for name in os.listdir(subclass)]
-        order = random.sample(range(len(patients)), k=len(patients))
-        for i in order:
-            if count < len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1):
-                shutil.copytree(subclass + patients[i], destPath + '/Train/benign/' + patients[i])
-                count += 1
-            elif count >= (len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1)) and (count < len(patients) - (int(percentageinTestandVal*len(patients)) + 1)):
-                shutil.copytree(subclass + patients[i], destPath + '/Test/benign/' + patients[i])
-                count += 1
-            else:
-                shutil.copytree(subclass + patients[i], destPath + '/Val/benign/' + patients[i])
-                count += 1
-    elif 'phyllodes' in subclass:
-        patients = [name for name in os.listdir(subclass)]
-        order = random.sample(range(len(patients)), k=len(patients))
-        for i in order:
-            if count < len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1):
-                shutil.copytree(subclass + patients[i], destPath + '/Train/benign/' + patients[i])
-                count += 1
-            elif count >= (len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1)) and (count < len(patients) - (int(percentageinTestandVal*len(patients)) + 1)):
-                shutil.copytree(subclass + patients[i], destPath + '/Test/benign/' + patients[i])
-                count += 1
-            else:
-                shutil.copytree(subclass + patients[i], destPath + '/Val/benign/' + patients[i])
-                count += 1
-    elif 'tubular' in subclass:
-        patients = [name for name in os.listdir(subclass)]
-        order = random.sample(range(len(patients)), k=len(patients))
-        for i in order:
-            if count < len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1):
-                shutil.copytree(subclass + patients[i], destPath + '/Train/benign/' + patients[i])
-                count += 1
-            elif count >= (len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1)) and (count < len(patients) - (int(percentageinTestandVal*len(patients)) + 1)):
-                shutil.copytree(subclass + patients[i], destPath + '/Test/benign/' + patients[i])
-                count += 1
-            else:
-                shutil.copytree(subclass + patients[i], destPath + '/Val/benign/' + patients[i])
-                count += 1
-    elif 'ductal' in subclass:
-        patients = [name for name in os.listdir(subclass)]
-        order = random.sample(range(len(patients)), k=len(patients))
-        for i in order:
-            if count < len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1):
-                shutil.copytree(subclass + patients[i], destPath + '/Train/malignant/' + patients[i])
-                count += 1
-            elif count >= (len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1)) and (count < len(patients) - (int(percentageinTestandVal*len(patients)) + 1)):
-                shutil.copytree(subclass + patients[i], destPath + '/Test/malignant/' + patients[i])
-                count += 1
-            else:
-                shutil.copytree(subclass + patients[i], destPath + '/Val/malignant/' + patients[i])
-                count += 1
-    elif 'lobular' in subclass:
-        patients = [name for name in os.listdir(subclass)]
-        order = random.sample(range(len(patients)), k=len(patients))
-        for i in order:
-            if count < len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1):
-                shutil.copytree(subclass + patients[i], destPath + '/Train/malignant/' + patients[i])
-                count += 1
-            elif count >= (len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1)) and (count < len(patients) - (int(percentageinTestandVal*len(patients)) + 1)):
-                shutil.copytree(subclass + patients[i], destPath + '/Test/malignant/' + patients[i])
-                count += 1
-            else:
-                shutil.copytree(subclass + patients[i], destPath + '/Val/malignant/' + patients[i])
-                count += 1
-    elif 'mucinous' in subclass:
-        patients = [name for name in os.listdir(subclass)]
-        order = random.sample(range(len(patients)), k=len(patients))
-        for i in order:
-            if count < len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1):
-                shutil.copytree(subclass + patients[i], destPath + '/Train/malignant/' + patients[i])
-                count += 1
-            elif count >= (len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1)) and (count < len(patients) - (int(percentageinTestandVal*len(patients)) + 1)):
-                shutil.copytree(subclass + patients[i], destPath + '/Test/malignant/' + patients[i])
-                count += 1
-            else:
-                shutil.copytree(subclass + patients[i], destPath + '/Val/malignant/' + patients[i])
-                count += 1
-    elif 'papillary' in subclass:
-        patients = [name for name in os.listdir(subclass)]
-        order = random.sample(range(len(patients)), k=len(patients))
-        for i in order:
-            if count < len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1):
-                shutil.copytree(subclass + patients[i], destPath + '/Train/malignant/' + patients[i])
-                count += 1
-            elif count >= (len(patients) - 2 * (int(percentageinTestandVal*len(patients)) + 1)) and (count < len(patients) - (int(percentageinTestandVal*len(patients)) + 1)):
-                shutil.copytree(subclass + patients[i], destPath + '/Test/malignant/' + patients[i])
-                count += 1
-            else:
-                shutil.copytree(subclass + patients[i], destPath + '/Val/malignant/' + patients[i])
-                count += 1
+for mag in magnification:
+    for n in test:
+        patient = patients[n]
+        if 'SOB_M' in patient:
+            shutil.move(os.path.join(output_path, mag, patients[n]), os.path.join(output_path, mag, 'Test', 'malignant', patients[n]))
+        if 'SOB_B' in patient:
+            shutil.move(os.path.join(output_path, mag, patients[n]), os.path.join(output_path, mag, 'Test', 'benign', patients[n]))
+    for n in train:
+        patient = patients[n]
+        if 'SOB_M' in patient:
+            shutil.move(os.path.join(output_path, mag, patients[n]), os.path.join(output_path, mag, 'Train', 'malignant', patients[n]))
+        if 'SOB_B' in patient:
+            shutil.move(os.path.join(output_path, mag, patients[n]), os.path.join(output_path, mag, 'Train', 'benign', patients[n]))
+    for n in val:
+        patient = patients[n]
+        if 'SOB_M' in patient:
+            shutil.move(os.path.join(output_path, mag, patients[n]), os.path.join(output_path, mag, 'Val', 'malignant', patients[n]))
+        if 'SOB_B' in patient:
+            shutil.move(os.path.join(output_path, mag, patients[n]), os.path.join(output_path, mag, 'Val', 'benign', patients[n]))
+    

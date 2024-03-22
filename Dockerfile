@@ -16,7 +16,10 @@
 # RUN apt install python3-pip -y
 # RUN pip install --upgrade pip
 # RUN pip install tensorflow==2.12.0 numpy scipy matplotlib tf-nightly ipython jupyter pandas sympy nose tensorflow-datasets opencv-python
+# ipython jupyter
 
 FROM tensorflow/tensorflow:latest-gpu
 RUN pip install --upgrade pip
-RUN pip install numpy scipy matplotlib tf-nightly ipython jupyter pandas sympy nose tensorflow-datasets opencv-python torchstain
+RUN pip install numpy scipy matplotlib pandas sympy nose tensorflow-datasets opencv-python scikit-learn numba
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
+RUN apt-get install nvidia-cuda-toolkit -y

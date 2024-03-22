@@ -19,15 +19,15 @@ def define_model():
     #     tf.keras.layers.Dense(128, activation='relu'),
     #     tf.keras.layers.Dense(2)])
 
-    # '''Model 1.1'''
-    # model = tf.keras.Sequential([
-    #     tf.keras.layers.Rescaling(1./255),
-    #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
-    #     tf.keras.layers.MaxPooling2D(),
-    #     tf.keras.layers.Flatten(),
-    #     tf.keras.layers.Dense(128, activation='relu'),
-    #     tf.keras.layers.Dense(2)
-    # ])
+    '''Model 1.1'''
+    model = tf.keras.Sequential([
+        tf.keras.layers.Rescaling(1./255),
+        tf.keras.layers.Conv2D(32, 3, activation='relu'),
+        tf.keras.layers.MaxPooling2D(),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(128, activation='relu'),
+        tf.keras.layers.Dense(2)
+    ])
 
     # '''Model 1.2'''
     # model = tf.keras.Sequential([
@@ -72,7 +72,7 @@ def define_model():
     #     tf.keras.layers.Dense(2)
     # ])
 
-    # '''Model 2.0'''
+    # # '''Model 2.0'''
     # model = tf.keras.Sequential([
     #     tf.keras.layers.Rescaling(1./255),
     #     tf.keras.layers.Conv2D(32, 3, activation='relu'),
@@ -123,10 +123,10 @@ def define_model():
 
     '''Compile the Model'''
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate = 1e-20),#learning_rate=1e-5),
-        #loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
+        optimizer=tf.keras.optimizers.Adam(learning_rate = 1e-9),#learning_rate=1e-5),
+        loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
         #loss = tf.keras.losses.BinaryCrossentropy(from_logits=True),
-        loss=tf.losses.SparseCategoricalCrossentropy(from_logits=False), # ResNet and VGG16
+        #loss=tf.losses.SparseCategoricalCrossentropy(from_logits=False), # ResNet and VGG16
         metrics=['accuracy','mae'])
 
     return model
@@ -184,7 +184,8 @@ def train(model,train_ds,val_ds):
         train_ds,
         validation_data=val_ds,        
         epochs=25,
-        # callbacks =[earlystopping]
+        class_weight = class_weights
+        # callbacks=[earlystopping]
         #callbacks =[model_checkpoint_callback]
     )
 
